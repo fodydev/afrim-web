@@ -20,6 +20,7 @@ global.memory = Object({
 
   //
   var idle = false;
+  var cursorPos = 0;
 
   // Clear the predicates.
   var clearPredicate = () => {
@@ -67,7 +68,11 @@ global.memory = Object({
       e.innerText = `${c} ${predicate[0]}. ${predicate[3]} ~${predicate[2]}`;
       e.addEventListener(
         "click",
-        () => preprocessor.commit(predicate[3]),
+        () => {
+          preprocessor.commit(predicate[3]);
+          preprocessor.process("", "keydown");
+          clearPredicate();
+        },
         false,
       );
       tooltipPredicatesElement.append(e);
@@ -77,11 +82,17 @@ global.memory = Object({
   // We execute preprocessor commands in idle.
   var processCommand = () => {
     var cmd = preprocessor.pop_stack();
+    var textValue = textFieldElement.value;
+
+    cursorPos = cursorPos < 0 ? 0 : cursorPos;
 
     if (cmd) {
       if (cmd.startsWith("!")) {
         if (cmd == "!backspace") {
-          textFieldElement.value = textfield.value.slice(0, -1);
+          textFieldElement.value =
+            textValue.substring(0, cursorPos - 1) +
+            textValue.substring(cursorPos, textValue.length);
+          cursorPos--;
         } else if (cmd == "!pause") {
           idle = true;
         } else if (cmd == "!resume") {
@@ -89,7 +100,10 @@ global.memory = Object({
         }
       } else if (cmd == ".") {
       } else {
-        textFieldElement.value += cmd;
+        textFieldElement.value =
+          textValue.substring(0, cursorPos) +
+          cmd +
+          textValue.substring(cursorPos, textValue.length);
       }
     }
 
@@ -122,6 +136,8 @@ global.memory = Object({
   textFieldElement.addEventListener(
     "keyup",
     (event) => {
+      cursorPos = textFieldElement.selectionEnd;
+
       // We manage special keys.
       if (event.ctrlKey) {
         // Previous predicate.
@@ -176,34 +192,41 @@ global.memory = Object({
 
   // Make the tooltip follow the mouse.
   textFieldElement.addEventListener(
-    "mousemove",
+    "keyup",
     (event) => {
-      tooltip.style.left = event.pageX + 10 + "px";
-      tooltip.style.top = event.pageY + 10 + "px";
+      var getCaretCoordinates = require("textarea-caret");
+      var caret = getCaretCoordinates(
+        textFieldElement,
+        textFieldElement.selectionEnd,
+      );
+
+      tooltip.style.top =
+        75 +
+        textFieldElement.offsetTop -
+        textFieldElement.scrollTop +
+        caret.top +
+        "px";
+      tooltip.style.left =
+        50 +
+        textFieldElement.offsetLeft -
+        textFieldElement.scrollLeft +
+        caret.left +
+        "px";
     },
     false,
   );
 
-  // Make the tooltip inactive outside of the textfield.
-  textFieldElement.addEventListener(
-    "mouseleave",
-    (event) => tooltipElement.classList.remove("is-active"),
-    false,
-  );
-
   // Make the tooltip active inside of the textfield.
-  textFieldElement.addEventListener(
-    "mouseover",
-    (event) => tooltipElement.classList.add("is-active"),
-    false,
-  );
-
-  // Make the tooltip active inside of the textfield.
-  textFieldElement.addEventListener(
-    "click",
-    (event) => tooltipElement.classList.add("is-active"),
-    false,
-  );
+  ["click", "touchstart"].forEach((e) => {
+    textFieldElement.addEventListener(
+      e,
+      (event) => {
+        tooltipElement.classList.add("is-active");
+        preprocessor.process("", "keydown");
+      },
+      false,
+    );
+  });
 
   // We start the processor.
   requestAnimationFrame(processCommand);
