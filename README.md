@@ -10,6 +10,8 @@
 
 <sub>Built by <a href="https://github.com/pythonbrad">@pythonbrad</a></sub>
 
+<img alt="Demo" src="https://github.com/pythonbrad/afrim-web/assets/45305909/d0cdf903-c2bc-4a1b-8bf7-d99d460c1019"/>
+
 </div>
 
 ## 🚴 Usage
