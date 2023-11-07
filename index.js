@@ -68,7 +68,7 @@ global.memory = Object({
       var el = document.createElement("a");
       el.classList.add("dropdown-item");
       el.innerText = `${c} ${predicate[0]}. ${predicate[3]} ~${predicate[2]}`;
-      ["pointerdown", "click", "touchstart"].forEach((e) => {
+      ["pointerdown", "click"].forEach((e) => {
         el.addEventListener(
           e,
           () => {
