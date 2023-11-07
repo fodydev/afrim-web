@@ -1,6 +1,7 @@
 import { Preprocessor, Translator } from "afrim-js";
 import { loadConfig } from "./config";
 
+// Memory
 global.memory = Object({
   predicates: Array(),
   predicateId: 0,
@@ -11,14 +12,14 @@ global.memory = Object({
 });
 
 (async function () {
-  //
+  // Binding
   var textFieldElement = document.getElementById("textfield");
   var downloadStatusElement = document.getElementById("download-status");
   var tooltipElement = document.getElementById("tooltip");
   var tooltipInputElement = document.getElementById("tooltip-input");
   var tooltipPredicatesElement = document.getElementById("tooltip-predicates");
 
-  //
+  // Global variables
   var idle = false;
   var cursorPos = 0;
 
@@ -52,6 +53,7 @@ global.memory = Object({
     tooltipPredicatesElement.innerHTML = "";
 
     var counter = 0;
+    // We get the current the page
     var predicates = global.memory.predicates
       .slice(global.memory.predicateId, global.memory.predicates.length)
       .concat(global.memory.predicates.slice(0, global.memory.predicateId));
@@ -63,20 +65,28 @@ global.memory = Object({
       if (counter++ > global.memory.pageSize) break;
 
       // Config the tooltip predicate element.
-      var e = document.createElement("a");
-      e.classList.add("dropdown-item");
-      e.innerText = `${c} ${predicate[0]}. ${predicate[3]} ~${predicate[2]}`;
-      e.addEventListener(
-        "click",
-        () => {
-          preprocessor.commit(predicate[3]);
-          preprocessor.process("", "keydown");
-          clearPredicate();
-        },
-        false,
-      );
-      tooltipPredicatesElement.append(e);
+      var el = document.createElement("a");
+      el.classList.add("dropdown-item");
+      el.innerText = `${c} ${predicate[0]}. ${predicate[3]} ~${predicate[2]}`;
+      ["pointerdown", "click", "touchstart"].forEach((e) => {
+        el.addEventListener(
+          e,
+          () => {
+            preprocessor.commit(predicate[3]);
+            preprocessor.process("", "keydown");
+            clearPredicate();
+          },
+          false,
+        );
+      });
+      tooltipPredicatesElement.append(el);
     }
+  };
+
+  // Restore cursor position.
+  var restoreCursorPosition = () => {
+    textFieldElement.focus();
+    textFieldElement.setSelectionRange(cursorPos, cursorPos);
   };
 
   // We execute preprocessor commands in idle.
@@ -93,6 +103,7 @@ global.memory = Object({
             textValue.substring(0, cursorPos - 1) +
             textValue.substring(cursorPos, textValue.length);
           cursorPos--;
+          restoreCursorPosition();
         } else if (cmd == "!pause") {
           idle = true;
         } else if (cmd == "!resume") {
@@ -104,6 +115,8 @@ global.memory = Object({
           textValue.substring(0, cursorPos) +
           cmd +
           textValue.substring(cursorPos, textValue.length);
+        cursorPos += cmd.length;
+        restoreCursorPosition();
       }
     }
 
@@ -201,7 +214,7 @@ global.memory = Object({
       );
 
       tooltip.style.top =
-        75 +
+        125 +
         textFieldElement.offsetTop -
         textFieldElement.scrollTop +
         caret.top +
@@ -220,12 +233,18 @@ global.memory = Object({
   ["click", "touchstart"].forEach((e) => {
     textFieldElement.addEventListener(
       e,
-      (event) => {
+      () => {
         tooltipElement.classList.add("is-active");
         preprocessor.process("", "keydown");
+        clearPredicate();
       },
       false,
     );
+  });
+
+  // Hide the tooltip if not typing
+  textFieldElement.addEventListener("blur", (e) => {
+    tooltipElement.classList.remove("is-active");
   });
 
   // We start the processor.
