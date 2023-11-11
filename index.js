@@ -131,7 +131,7 @@ global.memory = Object({
   var lang = sessionStorage.getItem("lang") || "geez";
   document.getElementById(lang).classList.toggle("is-active");
   await loadConfig(
-    `https://raw.githubusercontent.com/pythonbrad/afrim-data/minimal/${lang}/${lang}.toml`,
+    `https://raw.githubusercontent.com/pythonbrad/afrim-data/master/${lang}/${lang}.toml`,
   );
 
   //
