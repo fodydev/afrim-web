@@ -7,9 +7,6 @@ on:
   pull_request:
     branches: [main, release-*]
 
-permissions:
-  contents: write
-
 jobs:
   ci:
     name: CI
@@ -33,8 +30,3 @@ jobs:
 
       - name: Demo Build
         run: npm run build
-
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: dist
