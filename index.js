@@ -91,32 +91,32 @@ global.memory = Object({
 
   // We execute preprocessor commands in idle.
   var processCommand = () => {
-    var cmd = preprocessor.pop_stack();
+    var cmd = JSON.parse(preprocessor.popQueue());
     var textValue = textFieldElement.value;
 
     cursorPos = cursorPos < 0 ? 0 : cursorPos;
 
     if (cmd) {
-      if (cmd.startsWith("!")) {
-        if (cmd == "!backspace") {
-          textFieldElement.value =
-            textValue.substring(0, cursorPos - 1) +
-            textValue.substring(cursorPos, textValue.length);
-          cursorPos--;
-          restoreCursorPosition();
-        } else if (cmd == "!pause") {
-          idle = true;
-        } else if (cmd == "!resume") {
-          idle = false;
-        }
-      } else if (cmd == ".") {
-      } else {
+      if (cmd == "Delete") {
+        textFieldElement.value =
+          textValue.substring(0, cursorPos - 1) +
+          textValue.substring(cursorPos, textValue.length);
+        cursorPos--;
+        restoreCursorPosition();
+      } else if (cmd == "Pause") {
+        idle = true;
+      } else if (cmd == "Resume") {
+        idle = false;
+      } else if (cmd == "NOP") {
+      } else if (cmd.CommitText) {
         textFieldElement.value =
           textValue.substring(0, cursorPos) +
-          cmd +
+          cmd.CommitText +
           textValue.substring(cursorPos, textValue.length);
-        cursorPos += cmd.length;
+        cursorPos += cmd.CommitText.length;
         restoreCursorPosition();
+      } else {
+        console.error(`afrim command "${cmd}" unsupported.`);
       }
     }
 
@@ -139,8 +139,9 @@ global.memory = Object({
   downloadStatusElement.hidden = true;
 
   // We config the afrim ime.
-  var preprocessor = Preprocessor.new(global.memory.data, 64);
-  var translator = Translator.new(global.memory.dictionary, false);
+  const preprocessor = new Preprocessor(global.memory.data, 64);
+  const translator = new Translator(global.memory.dictionary, false);
+  global.memory.toto = preprocessor;
   Object.entries(global.memory.translators).forEach((e) =>
     translator.register(e[0], e[1]),
   );
@@ -189,7 +190,7 @@ global.memory = Object({
       if (idle) return;
 
       var changed = preprocessor.process(event.key, "keydown");
-      var input = preprocessor.get_input();
+      var input = preprocessor.getInput();
 
       // We update the predicates
       if (!changed) return;

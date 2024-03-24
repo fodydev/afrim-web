@@ -1,8 +1,8 @@
-import { convert_toml_to_json } from "afrim-js";
+import { convertTomlToJson } from "afrim-js";
 
 // Convert TOML to JSON.
 export function tomlToJson(data) {
-  return JSON.parse(convert_toml_to_json(data));
+  return JSON.parse(convertTomlToJson(data));
 }
 
 // Make a http get request.
