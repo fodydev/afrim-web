@@ -28,8 +28,8 @@ npm start
 - `README.md`: the file you are reading now!
 - `src/index.html`: a bare bones html document that includes the webpack bundle
 - `src/index.js`: the entry point of our web app
-- `config.js`: set of tools to handle the afrim config file
-- `utils.js`: some useful functions
+- `src/config.js`: set of tools to handle the afrim config file
+- `src/utils.js`: some useful functions
 - `package.json` and `package-lock.json`:
   - pulls in devDependencies for using webpack:
     - [`webpack`](https://www.npmjs.com/package/webpack)
