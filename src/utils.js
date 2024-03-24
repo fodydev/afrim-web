@@ -1,3 +1,5 @@
+"use strict";
+
 import { convertTomlToJson } from "afrim-js";
 
 // Convert TOML to JSON.
@@ -10,7 +12,7 @@ export function tomlToJson(data) {
 export async function httpGet(url) {
   return await new Promise((resolve, reject) => {
     const http = require("http");
-    var req = http.get(url, (res) => {
+    const req = http.get(url, (res) => {
       if (res.statusCode !== 200) {
         console.error(
           `Did not get an OK from the server. Code: ${res.statusCode}`,
@@ -19,7 +21,7 @@ export async function httpGet(url) {
         return;
       }
 
-      var data = "";
+      let data = "";
 
       res.on("data", (chunk) => {
         data += chunk;
