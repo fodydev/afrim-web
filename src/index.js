@@ -1,11 +1,15 @@
+"use strict";
+
 import { Preprocessor, Translator } from "afrim-js";
 import { loadConfig } from "./config";
 
-// Memory
-global.memory = Object({
+// Afrim
+global.afrim = Object({
   predicates: Array(),
   predicateId: 0,
   pageSize: 5,
+  isIdle: false,
+  cursorPos: 0,
   data: Object(),
   dictionary: Object(),
   translators: Object(),
@@ -13,31 +17,28 @@ global.memory = Object({
 
 (async function () {
   // Binding
-  var textFieldElement = document.getElementById("textfield");
-  var downloadStatusElement = document.getElementById("download-status");
-  var tooltipElement = document.getElementById("tooltip");
-  var tooltipInputElement = document.getElementById("tooltip-input");
-  var tooltipPredicatesElement = document.getElementById("tooltip-predicates");
-
-  // Global variables
-  var idle = false;
-  var cursorPos = 0;
+  const textFieldElement = document.getElementById("textfield");
+  const downloadStatusElement = document.getElementById("download-status");
+  const tooltipElement = document.getElementById("tooltip");
+  const tooltipInputElement = document.getElementById("tooltip-input");
+  const tooltipPredicatesElement =
+    document.getElementById("tooltip-predicates");
 
   // Clear the predicates.
-  var clearPredicate = () => {
+  const clearPredicate = () => {
     tooltipPredicatesElement.innerHTML = "";
-    global.memory.predicateId = 0;
-    global.memory.predicates = Array();
+    global.afrim.predicateId = 0;
+    global.afrim.predicates = Array();
   };
 
   // Load predicates in the memory
-  var loadPredicates = (predicates) => {
+  const loadPredicates = (predicates) => {
     clearPredicate();
     var predicateId = 0;
 
-    for (let predicate of predicates) {
-      for (let e of predicate[2]) {
-        global.memory.predicates.push([
+    for (const predicate of predicates) {
+      for (const e of predicate[2]) {
+        global.afrim.predicates.push([
           ++predicateId,
           predicate[0],
           predicate[1],
@@ -49,23 +50,23 @@ global.memory = Object({
   };
 
   // Update the predicates.
-  var updatePredicate = () => {
+  const updatePredicate = () => {
     tooltipPredicatesElement.innerHTML = "";
 
-    var counter = 0;
+    let counter = 0;
     // We get the current the page
-    var predicates = global.memory.predicates
-      .slice(global.memory.predicateId, global.memory.predicates.length)
-      .concat(global.memory.predicates.slice(0, global.memory.predicateId));
+    const predicates = global.afrim.predicates
+      .slice(global.afrim.predicateId, global.afrim.predicates.length)
+      .concat(global.afrim.predicates.slice(0, global.afrim.predicateId));
 
-    for (let predicate of predicates) {
+    for (const predicate of predicates) {
       // Mark the selected predicate.
-      var c = counter == 0 ? "✏️" : "";
+      const c = counter == 0 ? "✏️" : "";
 
-      if (counter++ > global.memory.pageSize) break;
+      if (counter++ > global.afrim.pageSize) break;
 
       // Config the tooltip predicate element.
-      var el = document.createElement("a");
+      const el = document.createElement("a");
       el.classList.add("dropdown-item");
       el.innerText = `${c} ${predicate[0]}. ${predicate[3]} ~${predicate[2]}`;
       ["pointerdown", "click"].forEach((e) => {
@@ -84,36 +85,40 @@ global.memory = Object({
   };
 
   // Restore cursor position.
-  var restoreCursorPosition = () => {
+  const restoreCursorPosition = () => {
     textFieldElement.focus();
-    textFieldElement.setSelectionRange(cursorPos, cursorPos);
+    textFieldElement.setSelectionRange(
+      global.afrim.cursorPos,
+      global.afrim.cursorPos,
+    );
   };
 
   // We execute preprocessor commands in idle.
-  var processCommand = () => {
-    var cmd = JSON.parse(preprocessor.popQueue());
-    var textValue = textFieldElement.value;
+  const processCommand = () => {
+    const cmd = JSON.parse(preprocessor.popQueue());
+    const textValue = textFieldElement.value;
 
-    cursorPos = cursorPos < 0 ? 0 : cursorPos;
+    global.afrim.cursorPos =
+      global.afrim.cursorPos < 0 ? 0 : global.afrim.cursorPos;
 
     if (cmd) {
       if (cmd == "Delete") {
         textFieldElement.value =
-          textValue.substring(0, cursorPos - 1) +
-          textValue.substring(cursorPos, textValue.length);
-        cursorPos--;
+          textValue.substring(0, global.afrim.cursorPos - 1) +
+          textValue.substring(global.afrim.cursorPos, textValue.length);
+        global.afrim.cursorPos--;
         restoreCursorPosition();
       } else if (cmd == "Pause") {
-        idle = true;
+        global.afrim.isIdle = true;
       } else if (cmd == "Resume") {
-        idle = false;
+        global.afrim.isIdle = false;
       } else if (cmd == "NOP") {
       } else if (cmd.CommitText) {
         textFieldElement.value =
-          textValue.substring(0, cursorPos) +
+          textValue.substring(0, global.afrim.cursorPos) +
           cmd.CommitText +
-          textValue.substring(cursorPos, textValue.length);
-        cursorPos += cmd.CommitText.length;
+          textValue.substring(global.afrim.cursorPos, textValue.length);
+        global.afrim.cursorPos += cmd.CommitText.length;
         restoreCursorPosition();
       } else {
         console.error(`afrim command "${cmd}" unsupported.`);
@@ -128,21 +133,21 @@ global.memory = Object({
   downloadStatusElement.hidden = false;
 
   // We download the datalang.
-  var lang = sessionStorage.getItem("lang") || "geez";
+  const lang = sessionStorage.getItem("lang") || "geez";
   document.getElementById(lang).classList.toggle("is-active");
   await loadConfig(
     `https://raw.githubusercontent.com/pythonbrad/afrim-data/minimal/${lang}/${lang}.toml`,
   );
 
-  //
+  // We mark the text field busy.
   textFieldElement.disabled = false;
   downloadStatusElement.hidden = true;
 
   // We config the afrim ime.
-  const preprocessor = new Preprocessor(global.memory.data, 64);
-  const translator = new Translator(global.memory.dictionary, false);
-  global.memory.toto = preprocessor;
-  Object.entries(global.memory.translators).forEach((e) =>
+  const preprocessor = new Preprocessor(global.afrim.data, 64);
+  const translator = new Translator(global.afrim.dictionary, false);
+  global.afrim.toto = preprocessor;
+  Object.entries(global.afrim.translators).forEach((e) =>
     translator.register(e[0], e[1]),
   );
 
@@ -150,29 +155,29 @@ global.memory = Object({
   textFieldElement.addEventListener(
     "keyup",
     (event) => {
-      cursorPos = textFieldElement.selectionEnd;
+      global.afrim.cursorPos = textFieldElement.selectionEnd;
 
       // We manage special keys.
       if (event.ctrlKey) {
         // Previous predicate.
         if (event.code == "ShiftLeft") {
-          global.memory.predicateId =
-            global.memory.predicateId < 1
-              ? global.memory.predicates.length - 1
-              : global.memory.predicateId - 1;
+          global.afrim.predicateId =
+            global.afrim.predicateId < 1
+              ? global.afrim.predicates.length - 1
+              : global.afrim.predicateId - 1;
           updatePredicate();
         }
         // Next predicate.
         else if (event.code == "ShiftRight") {
-          global.memory.predicateId =
-            global.memory.predicateId >= global.memory.predicates.length - 1
+          global.afrim.predicateId =
+            global.afrim.predicateId >= global.afrim.predicates.length - 1
               ? 0
-              : global.memory.predicateId + 1;
+              : global.afrim.predicateId + 1;
           updatePredicate();
         }
         // Commit the predicate.
         else if (event.code == "Space") {
-          var predicate = global.memory.predicates[global.memory.predicateId];
+          var predicate = global.afrim.predicates[global.afrim.predicateId];
 
           if (predicate) preprocessor.commit(predicate[3]);
           clearPredicate();
@@ -180,24 +185,24 @@ global.memory = Object({
           event.code == "ControlLeft" ||
           event.code == "ControlRight"
         ) {
-          idle = !idle;
+          global.afrim.isIdle = !global.afrim.idle;
         }
 
         return;
       }
 
       if (event.key == "GroupPrevious" || event.key == "GroupNext") return;
-      if (idle) return;
+      if (global.afrim.isIdle) return;
 
-      var changed = preprocessor.process(event.key, "keydown");
-      var input = preprocessor.getInput();
+      const changed = preprocessor.process(event.key, "keydown");
+      const input = preprocessor.getInput();
 
       // We update the predicates
       if (!changed) return;
 
       tooltipInputElement.innerText = "📝 " + input;
 
-      var predicates = translator.translate(input);
+      const predicates = translator.translate(input);
       loadPredicates(predicates);
       updatePredicate();
     },
@@ -208,8 +213,8 @@ global.memory = Object({
   textFieldElement.addEventListener(
     "keyup",
     (event) => {
-      var getCaretCoordinates = require("textarea-caret");
-      var caret = getCaretCoordinates(
+      const getCaretCoordinates = require("textarea-caret");
+      const caret = getCaretCoordinates(
         textFieldElement,
         textFieldElement.selectionEnd,
       );
