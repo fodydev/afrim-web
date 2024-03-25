@@ -133,10 +133,10 @@ global.afrim = Object({
   downloadStatusElement.hidden = false;
 
   // We download the datalang.
-  const lang = sessionStorage.getItem("lang") || "geez";
+  const lang = sessionStorage.getItem("lang") || "gez";
   document.getElementById(lang).classList.toggle("is-active");
   await loadConfig(
-    `https://raw.githubusercontent.com/pythonbrad/afrim-data/minimal/${lang}/${lang}.toml`,
+    `https://raw.githubusercontent.com/pythonbrad/afrim-data/fa8a5560e63a23ff7032e7c56fe5dbde2963b9fa/${lang}/${lang}.toml`,
   );
 
   // We mark the text field busy.
