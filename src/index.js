@@ -133,7 +133,7 @@ global.afrim = Object({
   downloadStatusElement.hidden = false;
 
   // We download the datalang.
-  const lang = sessionStorage.getItem("lang") || "gez";
+  const lang = sessionStorage.getItem("lang");
   document.getElementById(lang).classList.toggle("is-active");
   await loadConfig(
     `https://raw.githubusercontent.com/pythonbrad/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/${lang}/${lang}.toml`,
