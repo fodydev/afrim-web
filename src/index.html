@@ -32,35 +32,14 @@
             <div class="navbar-end">
               <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link"> Languages </a>
-                <div class="navbar-dropdown is-boxed">
-                  <div class="columns">
-                    <div class="column">
-                      <a class="navbar-item" id="am" onclick="setLang('am')">
-                        Amharic
-                      </a>
-                      <a class="navbar-item" id="gez" onclick="setLang('gez')">
-                        Geez
-                      </a>
-                    </div>
-                    <div class="column">
-                      <a
-                        class="navbar-item"
-                        id="clafrica"
-                        onclick="setLang('clafrica')"
-                      >
-                        Clafrica
-                      </a>
-                      <a class="navbar-item" id="fmp" onclick="setLang('fmp')">
-                        Nufi
-                      </a>
-                      <a class="navbar-item" id="bax" onclick="setLang('bax')">
-                        Bamun
-                      </a>
-                      <a class="navbar-item" id="ewo" onclick="setLang('ewo')">
-                        Ewondo
-                      </a>
-                    </div>
-                  </div>
+                <div class="navbar-dropdown is-boxed" id="lang-list">
+                  <a
+                    class="navbar-item"
+                    id="{{ lang_code }}"
+                    onclick="setLang('{{ lang_code }}')"
+                  >
+                    {{ lang_name }}
+                  </a>
                 </div>
               </div>
               <span class="navbar-item">
@@ -234,12 +213,39 @@
             $target.classList.toggle("is-active");
           });
         });
-      });
 
-      function setLang(lang) {
-        sessionStorage.setItem("lang", lang);
-        window.location.reload();
-      }
+        const langData = Object.entries({
+          am: "Amharic",
+          bax: "Bamun",
+          ewo: "Ewondo",
+          fmp: "Nufi",
+          gez: "Geez",
+        });
+        const langListElement = document.getElementById("lang-list");
+        const langHTML = langListElement.innerHTML;
+
+        langListElement.innerHTML = "";
+
+        for (const lang of langData) {
+          const langItem = document.createElement("a");
+          langItem.className = "navbar-item";
+          langItem.id = lang[0];
+          langItem.onclick = function () {
+            window.location.search = `?lang=${lang[0]}`;
+          };
+          langItem.textContent = lang[1];
+          langListElement.appendChild(langItem);
+        }
+
+        // Set the language.
+        var lang = window.location.search.match(/lang=(\w*)/);
+        if (lang != null && langData.find((e) => e[0] == lang[1])) {
+          lang = lang[1];
+          sessionStorage.setItem("lang", lang);
+        } else {
+          sessionStorage.setItem("lang", langData[0][0]);
+        }
+      });
     </script>
     <script src="./bootstrap.js"></script>
   </body>
