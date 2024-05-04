@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>⌨️ Afrim Web</title>
+    <meta name="description" content="Afrim web interface." />
+    <meta name="author" content="@pythonbrad" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/bulmaswatch/sandstone/bulmaswatch.min.css"
+    />
+    <link
+      href="https://unpkg.com/@fortawesome/fontawesome-free@5.13.0/css/all.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div>
+      <nav class="navbar is-primary">
+        <div class="container">
+          <div class="navbar-brand">
+            <a class="navbar-item"> ⌨️ Afrim Web</a>
+            <span class="navbar-burger burger" data-target="navbarMenuHero8">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </div>
+          <div id="navbarMenuHero8" class="navbar-menu">
+            <div class="navbar-end">
+              <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link"> Languages </a>
+                <div class="navbar-dropdown is-boxed" id="lang-list">
+                  <a
+                    class="navbar-item"
+                    id="{{ lang_code }}"
+                    onclick="setLang('{{ lang_code }}')"
+                  >
+                    {{ lang_name }}
+                  </a>
+                </div>
+              </div>
+              <span class="navbar-item">
+                <a
+                  class="button is-inverted"
+                  href="https://github.com/pythonbrad/afrim-web"
+                  target="_blank"
+                >
+                  <span class="icon">
+                    <i class="fab fa-github"></i>
+                  </span>
+                  <span>Source Code</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <!-- Hero content: will be in the middle -->
+    <div class="hero">
+      <div class="hero-body">
+        <div class="container has-text-centered">
+          <h1 class="title">Afrim Web</h1>
+          <div id="download-status" hidden>
+            <span class="subtitle is-medium">Downloading of dataset...</span>
+            <progress class="progress is-medium is-info" max="100"></progress>
+            <br />
+          </div>
+          <textarea
+            autocomplete="false"
+            id="textfield"
+            class="textarea is-medium"
+            style="height: 50vh"
+            placeholder="You can begin to type here..."
+          ></textarea>
+        </div>
+        <br />
+        <div class="container">
+          <h1 class="title">Keyboard shortcuts</h1>
+          <hr />
+
+          <table class="table is-narrow subtitle">
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>Shortcut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Pause / Resume</td>
+                <td>
+                  <span class="tag is-primary">Ctrl Left</span>
+                  <span>+</span>
+                  <span class="tag">Ctrl Right</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Clear</td>
+                <td>
+                  <span class="tag is-primary">Escape</span>
+                  <span>/</span>
+                  <span class="tag is-primary">Space</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Select Next Predicate</td>
+                <td>
+                  <span class="tag is-primary">Ctrl</span>
+                  <span>+</span>
+                  <span class="tag">Shift Left</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Select Previous Predicate</td>
+                <td>
+                  <span class="tag is-primary">Ctrl</span>
+                  <span>+</span>
+                  <span class="tag">Shift Right</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Commit Selected Predicate</td>
+                <td>
+                  <span class="tag is-primary">Ctrl</span>
+                  <span>+</span>
+                  <span class="tag">Space</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Hero footer: will stick at the bottom -->
+      <div class="hero-foot">
+        <nav class="footer">
+          <div class="content is-medium has-text-centered">
+            <p>
+              <a
+                class="icon"
+                href="https://github.com/pythonbrad/afrim-web"
+                target="_blank"
+              >
+                <i class="fab fa-github"></i>
+              </a>
+              &nbsp;
+              <a
+                class="icon"
+                href="https://twitter.com/pythonbrad"
+                target="_blank"
+              >
+                <i class="fab fa-twitter"></i>
+              </a>
+            </p>
+            <p>
+              <strong>Afrim Web</strong> by
+              <a href="https://github.com/pythonbrad" target="_blank"
+                >Brady Fomegne</a
+              >. <br />
+              Based on
+              <a href="https://github.com/pythonbrad/afrim-js" target="_blank"
+                >AfrimJS</a
+              >. <br />
+              The source code is licensed
+              <a
+                href="https://opensource.org/licenses/mit-license.php"
+                target="_blank"
+                >MIT</a
+              >.
+            </p>
+            <a
+              class="button is-warning"
+              href="https://www.buymeacoffee.com/pythonbrad"
+              target="_blank"
+            >
+              <span class="icon">
+                <i class="fas fa-coffee"></i>
+              </span>
+              <span>Buy Me A Coffee</span>
+            </a>
+          </div>
+        </nav>
+      </div>
+    </div>
+    <div id="tooltip" class="dropdown" style="z-index: 999; position: absolute">
+      <div class="dropdown-menu">
+        <div class="dropdown-content">
+          <a class="dropdown-item" id="tooltip-input"> Cursor </a>
+          <hr class="dropdown-divider" />
+          <div id="tooltip-predicates"></div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      document.addEventListener("DOMContentLoaded", () => {
+        // Get all "navbar-burger" elements
+        const $navbarBurgers = Array.prototype.slice.call(
+          document.querySelectorAll(".navbar-burger"),
+          0,
+        );
+        // Add a click event on each of them
+        $navbarBurgers.forEach((el) => {
+          el.addEventListener("click", () => {
+            // Get the target from the "data-target" attribute
+            const target = el.dataset.target;
+            const $target = document.getElementById(target);
+
+            // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+            el.classList.toggle("is-active");
+            $target.classList.toggle("is-active");
+          });
+        });
+
+        const langData = Object.entries({
+          am: "Amharic",
+          bax: "Bamun",
+          ewo: "Ewondo",
+          fmp: "Nufi",
+          gez: "Geez",
+        });
+        const langListElement = document.getElementById("lang-list");
+        const langHTML = langListElement.innerHTML;
+
+        langListElement.innerHTML = "";
+
+        for (const lang of langData) {
+          const langItem = document.createElement("a");
+          langItem.className = "navbar-item";
+          langItem.id = lang[0];
+          langItem.onclick = function () {
+            window.location.search = `?lang=${lang[0]}`;
+          };
+          langItem.textContent = lang[1];
+          langListElement.appendChild(langItem);
+        }
+
+        // Set the language.
+        var lang = window.location.search.match(/lang=(\w*)/);
+        if (lang != null && langData.find((e) => e[0] == lang[1])) {
+          lang = lang[1];
+          sessionStorage.setItem("lang", lang);
+        } else {
+          sessionStorage.setItem("lang", langData[0][0]);
+        }
+      });
+    </script>
+    <script src="./bootstrap.js"></script>
+  </body>
+</html>
