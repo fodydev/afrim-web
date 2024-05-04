@@ -3,90 +3,84 @@
 import { httpGet, tomlToJson } from "./utils";
 
 // Load the afrim configuration through an URL.
-export async function loadConfig(path) {
-  const content = await httpGet(path).then((data) => tomlToJson(data));
+export async function loadConfig(config_file) {
+  const data = await httpGet(config_file);
+  const content = tomlToJson(data);
   let auto_capitalize = false;
 
-  if (content.core) {
-    auto_capitalize = content.core.auto_capitalize || false;
+  if (content.has("core")) {
+    auto_capitalize = content.get("core").get("auto_capitalize") || false;
   }
 
-  if (typeof content.translation == "object") {
-    const items = await Object.entries(content.translation);
-
-    for (const item of items) {
-      const key = item[0];
-      const value = item[1];
+  if (content.has("translation")) {
+    for (const translation of content.get("translation")) {
+      const key = translation[0];
+      const value = translation[1];
 
       // We extract the translation.
-      if (typeof value == "object") {
-        if (value.path) {
-          await loadConfig(new URL(value.path, path).href);
-        } else if (value.alias) {
-          let _ = null;
-
-          if (value.values) {
-            _ = value.values;
-          } else {
-            _ = [value.value];
-          }
-
-          for (const e of value.alias) {
-            global.afrim.dictionary[e] = _;
-          }
-          global.afrim.dictionary[key] = _;
-        }
-      } else {
+      if (typeof value == "string") {
         global.afrim.dictionary[key] = [value];
+      } else if (value.has("path")) {
+        await loadConfig(new URL(value.get("path"), config_file).href);
+      } else if (value.has("alias")) {
+        let data = null;
+
+        if (value.has("values")) {
+          data = value.get("values");
+        } else {
+          data = [value.get("value")];
+        }
+
+        for (const alias of value.get("alias")) {
+          global.afrim.dictionary[alias] = data;
+        }
+        global.afrim.dictionary[key] = data;
+      } else {
+        throw new Error(`load config error: ${value} unexpected`);
       }
     }
   }
 
   // We extract the data.
-  if (typeof content.data == "object") {
-    const items = await Object.entries(content.data);
+  if (content.has("data")) {
+    for (const data of content.get("data")) {
+      const key = data[0];
+      const value = data[1];
 
-    for (const item of items) {
-      const key = item[0];
-      const value = item[1];
-
-      if (typeof value == "object") {
-        if (value.path) {
-          await loadConfig(new URL(value.path, path).href);
-        } else if (value.alias) {
-          for (const e of value.alias) {
-            global.afrim.data[e] = value.value;
-
-            if (auto_capitalize) {
-              global.afrim.data[e[0].toUpperCase() + e.slice(1)] =
-                value.value.toUpperCase();
-            }
-          }
-          global.afrim.data[key] = value.value;
+      if (typeof value == "string") {
+        global.afrim.data[key] = value;
+      } else if (value.has("path")) {
+        await loadConfig(new URL(value.get("path"), config_file).href);
+      } else if (value.has("alias")) {
+        const data = value.get("value");
+        for (const alias of value.get("alias")) {
+          global.afrim.data[alias] = data;
 
           if (auto_capitalize) {
-            global.afrim.data[key[0].toUpperCase() + key.slice(1)] =
-              value.value.toUpperCase();
+            global.afrim.data[data[0].toUpperCase() + data.slice(1)] =
+              data.toUpperCase();
           }
         }
+        global.afrim.data[key] = data;
+
+        if (auto_capitalize) {
+          global.afrim.data[key[0].toUpperCase() + key.slice(1)] =
+            data.toUpperCase();
+        }
       } else {
-        global.afrim.data[key] = value;
+        throw new Error(`load config error: ${value} unexpected`);
       }
     }
   }
 
   // We extract the translators.
-  if (typeof content.translator == "object") {
-    const items = await Object.entries(content.translator);
+  if (content.has("translator")) {
+    for (const translator of content.get("translator")) {
+      const key = translator[0];
+      const value = translator[1];
+      const data = await httpGet(new URL(value, file_path).href);
 
-    for (const item of items) {
-      const key = item[0];
-      const value = item[1];
-      const content = await httpGet(new URL(value, path).href).then(
-        (data) => data,
-      );
-
-      global.afrim.translators[key] = content;
+      global.afrim.translators[key] = data;
     }
   }
 }
