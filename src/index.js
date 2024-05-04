@@ -37,13 +37,13 @@ global.afrim = Object({
     var predicateId = 0;
 
     for (const predicate of predicates) {
-      for (const e of predicate[2]) {
+      for (const text of predicate.texts) {
         global.afrim.predicates.push([
           ++predicateId,
-          predicate[0],
-          predicate[1],
-          e,
-          predicate[3],
+          predicate.code,
+          predicate.remaining_code,
+          text,
+          predicate.can_commit,
         ]);
       }
     }
@@ -95,7 +95,7 @@ global.afrim = Object({
 
   // We execute preprocessor commands in idle.
   const processCommand = () => {
-    const cmd = JSON.parse(preprocessor.popQueue());
+    const cmd = preprocessor.popQueue();
     const textValue = textFieldElement.value;
 
     global.afrim.cursorPos =

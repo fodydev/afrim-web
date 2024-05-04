@@ -1,41 +1,21 @@
 "use strict";
 
 import { convertTomlToJson } from "afrim-js";
+import ky from "ky";
 
 // Convert TOML to JSON.
 export function tomlToJson(data) {
-  return JSON.parse(convertTomlToJson(data));
+  return convertTomlToJson(data);
 }
 
 // Make a http get request.
 // HTTP because we want a fast request.
 export async function httpGet(url) {
-  return await new Promise((resolve, reject) => {
-    const http = require("http");
-    const req = http.get(url, (res) => {
-      if (res.statusCode !== 200) {
-        console.error(
-          `Did not get an OK from the server. Code: ${res.statusCode}`,
-        );
-        res.resume();
-        return;
-      }
+  const response = await ky(url);
 
-      let data = "";
+  if (!response.ok) throw new Error(`Fetch error: ${response.statusText}`);
 
-      res.on("data", (chunk) => {
-        data += chunk;
-      });
-
-      res.on("close", () => {
-        resolve(data);
-      });
-    });
-
-    req.on("error", (err) => {
-      reject(err);
-    });
-  });
+  return await response.text();
 }
 
 // Whether if the device is a mobile
