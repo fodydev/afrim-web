@@ -219,13 +219,13 @@ global.afrim = Object({
         textFieldElement.selectionEnd,
       );
 
-      tooltip.style.top =
+      tooltipElement.style.top =
         125 +
         textFieldElement.offsetTop -
         textFieldElement.scrollTop +
         caret.top +
         "px";
-      tooltip.style.left =
+      tooltipElement.style.left =
         50 +
         textFieldElement.offsetLeft -
         textFieldElement.scrollLeft +
