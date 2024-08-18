@@ -1,0 +1,30 @@
+{
+  "name": "afrim-playground",
+  "private": true,
+  "description": "Playground to test the afrim input method.",
+  "scripts": {
+    "bundle": "webpack",
+    "start": "webpack-dev-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fodydev/afrim-web.git"
+  },
+  "keywords": [
+    "afrim",
+    "wasm",
+    "rust",
+    "ime"
+  ],
+  "author": "Brady Fomegne <brady.fomegne@outlook.com>",
+  "license": "MIT",
+  "dependencies": {
+    "afrim-input": "file:../afrim-input"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^11.0.0",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "afrim-input",
+  "version": "0.1.0",
+  "description": "A library that simplify the deployment of Afrim in any text field.",
+  "main": "dist/afrim_input.js",
+  "module": "src/index.js",
+  "scripts": {
+    "bundle": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fodydev/afrim-web.git"
+  },
+  "keywords": [
+    "afrim",
+    "wasm",
+    "rust",
+    "ime"
+  ],
+  "author": "Brady Fomegne <brady.fomegne@outlook.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pythonbrad/afrim-web/issues"
+  },
+  "homepage": "https://github.com/pythonbrad/afrim-web#readme",
+  "dependencies": {
+    "afrim-js": "^0.4.0",
+    "ky": "^1.2.4",
+    "textarea-caret": "^3.1.0"
+  },
+  "devDependencies": {
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  }
+}
