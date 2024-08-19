@@ -74,11 +74,11 @@ export async function loadConfig(config_file) {
   }
 
   // We extract the translators.
-  if (content.has("translator")) {
-    for (const translator of content.get("translator")) {
+  if (content.has("translators")) {
+    for (const translator of content.get("translators")) {
       const key = translator[0];
       const value = translator[1];
-      const data = await httpGet(new URL(value, file_path).href);
+      const data = await httpGet(new URL(value, config_file).href);
 
       global.afrim.translators[key] = data;
     }
