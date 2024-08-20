@@ -15,7 +15,7 @@
   \**************************/
 /***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
 
-eval("// A dependency graph that contains any wasm must all be imported\n// asynchronously. This `bootstrap.js` file does the single async import, so\n// that no one else needs to worry about it again.\nPromise.all(/*! import() */[__webpack_require__.e(\"vendors-node_modules_afrim-js_afrim_js_js-node_modules_textarea-caret_index_js-node_modules_k-5a0510\"), __webpack_require__.e(\"src_index_js\")]).then(__webpack_require__.bind(__webpack_require__, /*! ./index.js */ \"./src/index.js\")).catch((e) =>\n  console.error(\"Error importing `index.js`:\", e),\n);\n\n\n//# sourceURL=webpack://afrim-web/./src/bootstrap.js?");
+eval("// A dependency graph that contains any wasm must all be imported\n// asynchronously. This `bootstrap.js` file does the single async import, so\n// that no one else needs to worry about it again.\nPromise.all(/*! import() */[__webpack_require__.e(\"vendors-node_modules_afrim-js_afrim_js_js-node_modules_textarea-caret_index_js-node_modules_k-5a0510\"), __webpack_require__.e(\"src_index_js\")]).then(__webpack_require__.bind(__webpack_require__, /*! ./index.js */ \"./src/index.js\"))\n  .then((o) => {\n    window.Afrim = o.Afrim;\n  })\n  .catch((e) => console.error(\"Error importing `index.js`:\", e));\n\n\n//# sourceURL=webpack://afrim-playground/./src/bootstrap.js?");
 
 /***/ })
 
@@ -151,7 +151,7 @@ eval("// A dependency graph that contains any wasm must all be imported\n// asyn
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "" + chunkId + ".bootstrap.js";
+/******/ 			return "" + chunkId + ".index.js";
 /******/ 		};
 /******/ 	})();
 /******/ 	
@@ -190,7 +190,7 @@ eval("// A dependency graph that contains any wasm must all be imported\n// asyn
 /******/ 	/* webpack/runtime/load script */
 /******/ 	(() => {
 /******/ 		var inProgress = {};
-/******/ 		var dataWebpackPrefix = "afrim-web:";
+/******/ 		var dataWebpackPrefix = "afrim-playground:";
 /******/ 		// loadScript function to load a script via script tag
 /******/ 		__webpack_require__.l = (url, done, key, chunkId) => {
 /******/ 			if(inProgress[url]) { inProgress[url].push(done); return; }
@@ -379,7 +379,7 @@ eval("// A dependency graph that contains any wasm must all be imported\n// asyn
 /******/ 		
 /******/ 		}
 /******/ 		
-/******/ 		var chunkLoadingGlobal = self["webpackChunkafrim_web"] = self["webpackChunkafrim_web"] || [];
+/******/ 		var chunkLoadingGlobal = self["webpackChunkafrim_playground"] = self["webpackChunkafrim_playground"] || [];
 /******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
 /******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 /******/ 	})();

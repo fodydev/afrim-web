@@ -5,7 +5,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>⌨️ Afrim Web</title>
-    <meta name="description" content="Afrim web interface." />
+    <meta
+      name="description"
+      content="Afrim provides an online playground to try out its engine features without having to install anything."
+    />
     <meta name="author" content="@pythonbrad" />
     <link
       rel="stylesheet"
@@ -194,6 +197,9 @@
         </div>
       </div>
     </div>
+    <!-- Maybe your are wondering why we aren't using async and defer. -->
+    <!-- It's not yet supported by some webbrowsers -->
+    <script type="text/javascript" src="./index.js"></script>
     <script type="text/javascript">
       document.addEventListener("DOMContentLoaded", () => {
         // Get all "navbar-burger" elements
@@ -214,6 +220,7 @@
           });
         });
 
+        // Update the datasets menu.
         const langData = Object.entries({
           am: "Amharic",
           bax: "Bamun",
@@ -239,14 +246,31 @@
 
         // Set the language.
         var lang = window.location.search.match(/lang=(\w*)/);
-        if (lang != null && langData.find((e) => e[0] == lang[1])) {
-          lang = lang[1];
+        lang = lang ? lang[1] : null;
+        var lang = lang ?? sessionStorage.getItem("lang");
+        if (lang != null && langData.find((e) => e[0] == lang)) {
           sessionStorage.setItem("lang", lang);
         } else {
-          sessionStorage.setItem("lang", langData[0][0]);
+          lang = langData[0][0];
+          sessionStorage.setItem("lang", lang);
         }
+
+        // Wait the afrim to be available.
+        (function initAfrim() {
+          if (window.Afrim) {
+            new Afrim({
+              textFieldElementID: "textfield",
+              downloadStatusElementID: "download-status",
+              tooltipElementID: "tooltip",
+              tooltipInputElementID: "tooltip-input",
+              tooltipPredicatesElementID: "tooltip-predicates",
+              configUrl: `https://raw.githubusercontent.com/pythonbrad/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/${lang}/${lang}.toml`,
+            });
+            return;
+          }
+          requestAnimationFrame(initAfrim);
+        })();
       });
     </script>
-    <script src="./bootstrap.js"></script>
   </body>
 </html>
