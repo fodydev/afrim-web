@@ -5,7 +5,7 @@
 <strong>A <code>js library</code> that simplify the deployment of `afrim` in any text field.</strong>
 
 <p>
-  <a href="https://www.npmjs.org/package/afrim-js"><img alt="NPM version" src="https://img.shields.io/npm/v/afrim-input.svg?style=flat-square"/></a>
+  <a href="https://www.npmjs.org/package/afrim-input"><img alt="NPM version" src="https://img.shields.io/npm/v/afrim-input.svg?style=flat-square"/></a>
 </p>
 
 </div>
