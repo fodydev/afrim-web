@@ -10,7 +10,7 @@
     "nodes": ">=18.0.0"
   },
   "scripts": {
-    "build-afrim-input": "npm -w afrim-input build",
+    "build-afrim-input": "npm -w afrim-input run bundle",
     "build": "npm -w afrim-playground run bundle",
     "start": "npm -w afrim-playground start",
     "fmt-check": "npx prettier . --check",
