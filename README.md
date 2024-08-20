@@ -2,7 +2,7 @@
 
   <h1><code>afrim-web</code></h1>
 
-<strong>A <code>web input method engine</code> powered by <a href="https://github.com/pythonbrad/afrim-js">afrim-js</a>.</strong>
+<strong>A <code>web platform</code> for the afrim input method engine powered by <a href="https://github.com/pythonbrad/afrim-js">afrim-js</a>.</strong>
 
   <p>
     <a href="https://github.com/pythonbrad/afrim-web/actions/workflows/ci.yml"><img alt="Build Status" src="https://github.com/pythonbrad/afrim-web/actions/workflows/ci.yml/badge.svg?branch=main"/></a>&nbsp;
@@ -15,28 +15,16 @@
 
 </div>
 
-## 🚴 Usage
+## 🚀 How to deploy?
 
 ```
 npm install
 npm start
 ```
 
-## 🔋 Files Included
+## 🚴 Components availables for reuse
 
-- `.gitignore`: ignores `node_modules`
-- `README.md`: the file you are reading now!
-- `src/index.html`: a bare bones html document that includes the webpack bundle
-- `src/index.js`: the entry point of our web app
-- `src/config.js`: set of tools to handle the afrim config file
-- `src/utils.js`: some useful functions
-- `package.json` and `package-lock.json`:
-  - pulls in devDependencies for using webpack:
-    - [`webpack`](https://www.npmjs.com/package/webpack)
-    - [`webpack-cli`](https://www.npmjs.com/package/webpack-cli)
-    - [`webpack-dev-server`](https://www.npmjs.com/package/webpack-dev-server)
-  - defines a `start` script to run `webpack-dev-server`
-- `webpack.config.js`: configuration file for bundling the js with webpack
+- ✍️ [afrim-input](packages/afrim-input): A js library who allow you to easily reuse the afrim on any text field.
 
 ## License
 

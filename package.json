@@ -1,35 +1,37 @@
 {
   "name": "afrim-web",
-  "version": "0.1.0",
-  "description": "Web interface for the Afrim input method.",
-  "main": "index.js",
+  "private": true,
+  "description": "Web platform for the Afrim input method.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "packageManager": "npm@10.7.0",
+  "engines": {
+    "nodes": ">=18.0.0"
+  },
   "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "start": "webpack-dev-server",
+    "build-afrim-input": "npm -w afrim-input run bundle",
+    "build": "npm -w afrim-playground run bundle",
+    "start": "npm -w afrim-playground start",
     "fmt-check": "npx prettier . --check",
     "fmt": "npx prettier . --write --cache"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pythonbrad/afrim-web.git"
+    "url": "git+https://github.com/fodydev/afrim-web.git"
   },
   "keywords": [
     "afrim",
     "wasm",
     "rust",
+    "africa",
     "ime"
   ],
-  "author": "Brady Fomegne <fomegnemeudje@outlook.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pythonbrad/afrim-web/issues"
+    "url": "https://fodydev.github.io/afrim-web"
   },
   "homepage": "https://github.com/pythonbrad/afrim-web#readme",
-  "dependencies": {
-    "afrim-js": "^0.4.0",
-    "ky": "^1.2.4",
-    "textarea-caret": "^3.1.0"
-  },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
     "prettier": "3.2.5",
