@@ -1,11 +1,11 @@
 {
   "name": "afrim-input",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A library that simplify the deployment of Afrim in any text field.",
   "main": "dist/afrim_input.js",
   "module": "src/index.js",
   "scripts": {
-    "bundle": "webpack"
+    "bundle": "webpack --config webpack.prod.js"
   },
   "repository": {
     "type": "git",
@@ -29,7 +29,10 @@
     "textarea-caret": "^3.1.0"
   },
   "devDependencies": {
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.5.4",
     "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "webpack-merge": "^6.0.1"
   }
 }
