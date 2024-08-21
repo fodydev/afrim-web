@@ -36,8 +36,8 @@ export default class Afrim {
       tooltipInputElementID: "tooltip-input",
       tooltipPredicatesElementID: "tooltip-predicates",
       tooltipPredicateClass: "dropdown-item",
-      tooltipAdjustLeft: 50,
-      tooltipAdjustTop: 125,
+      tooltipAdjustLeft: 0,
+      tooltipAdjustTop: 0,
       configUrl:
         "https://raw.githubusercontent.com/pythonbrad/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/gez/gez.toml",
     };
