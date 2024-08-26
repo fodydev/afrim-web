@@ -156,7 +156,7 @@ export default class AfrimInput {
   }
 
   // Load predicates in the memory
-  private loadPredicates(predicates: Predicate[]) {
+  private loadPredicates(predicates: any) {
     this.clearPredicate();
     var predicateId = 0;
 
@@ -165,9 +165,9 @@ export default class AfrimInput {
         this.data.predicates.push({
           id: ++predicateId,
           code: predicate.code,
-          remainingCode: predicate.remainingCode,
+          remainingCode: predicate.remaining_code,
           texts: [text],
-          canCommit: predicate.canCommit,
+          canCommit: predicate.can_commit,
         });
       }
     }
