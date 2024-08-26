@@ -14,7 +14,7 @@ export class AfrimConfig {
   // Load the configuration file from an URL.
   async loadFromUrl(configUrl: string) {
     const data = await httpGet(configUrl);
-    const content = tomlToJson(data);
+    const content = await tomlToJson(data);
     let auto_capitalize = false;
 
     if (content.has("core")) {

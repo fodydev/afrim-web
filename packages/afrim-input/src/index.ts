@@ -1,6 +1,6 @@
 "use strict";
 
-import { Preprocessor, Translator } from "afrim-js";
+import type { Preprocessor, Translator } from "afrim-js";
 import { AfrimConfig } from "./config";
 
 type Option = {
@@ -33,8 +33,8 @@ export default class AfrimInput {
   private tooltipPredicatesElement: HTMLElement;
 
   // Afrim library.
-  private preprocessor: Preprocessor;
-  private translator: Translator;
+  private preprocessor?: Preprocessor;
+  private translator?: Translator;
 
   // Data
   private data: {
@@ -43,17 +43,10 @@ export default class AfrimInput {
     pageSize: number;
     isIdle: boolean;
     cursorPos: number;
-    options: Option | null;
-  } = {
-    predicates: Array(),
-    predicateId: 0,
-    pageSize: 5,
-    isIdle: false,
-    cursorPos: 0,
-    options: null,
+    options: Option;
   };
 
-  private animation: number;
+  private animation: number = 0;
 
   // Initialize the Afrim Input instance.
   constructor(options: Option) {
@@ -75,22 +68,52 @@ export default class AfrimInput {
     options = { ...defaultOptions, ...options };
 
     // Binding
-    this.textFieldElement = document.getElementById(
-      options.textFieldElementID,
-    ) as HTMLInputElement;
-    this.downloadStatusElement = document.getElementById(
-      options.downloadStatusElementID,
-    );
-    this.tooltipElement = document.getElementById(options.tooltipElementID);
-    this.tooltipInputElement = document.getElementById(
-      options.tooltipInputElementID,
-    );
-    this.tooltipPredicatesElement = document.getElementById(
-      options.tooltipPredicatesElementID,
-    );
+    var _ = document.getElementById(options.textFieldElementID);
+    if (_) {
+      this.textFieldElement = _ as HTMLInputElement;
+    } else {
+      throw new Error(
+        `element with id ${options.textFieldElementID} not found`,
+      );
+    }
+
+    var _ = document.getElementById(options.downloadStatusElementID);
+    if (_) {
+      this.downloadStatusElement = _ as HTMLElement;
+    } else {
+      throw new Error(`element with id ${options.downloadStatusElementID}`);
+    }
+
+    var _ = document.getElementById(options.tooltipElementID);
+    if (_) {
+      this.tooltipElement = _ as HTMLElement;
+    } else {
+      throw new Error(`element with id ${options.tooltipElementID}`);
+    }
+
+    var _ = document.getElementById(options.tooltipInputElementID);
+    if (_) {
+      this.tooltipInputElement = _ as HTMLElement;
+    } else {
+      throw new Error(`element with id ${options.tooltipInputElementID}`);
+    }
+
+    var _ = document.getElementById(options.tooltipPredicatesElementID);
+    if (_) {
+      this.tooltipPredicatesElement = _ as HTMLElement;
+    } else {
+      throw new Error(`element with id ${options.tooltipPredicatesElementID}`);
+    }
 
     // Save options
-    this.data.options = options;
+    this.data = {
+      predicates: Array(),
+      predicateId: 0,
+      pageSize: 5,
+      isIdle: false,
+      cursorPos: 0,
+      options: options,
+    };
 
     // Prevent another afrim instance.
     if (this.textFieldElement.dataset.lock) {
@@ -105,8 +128,8 @@ export default class AfrimInput {
     this.downloadStatusElement.hidden = false;
 
     this.loadConfigFromUrl(options.configUrl).then(
-      (config: AfrimConfig) => {
-        this.initAfrim(config);
+      async (config: AfrimConfig) => {
+        await this.initAfrim(config);
         this.listenKeyboard();
         this.listenMouse();
         this.listenTextFieldState();
@@ -174,8 +197,8 @@ export default class AfrimInput {
         predicateElement.addEventListener(
           event,
           () => {
-            this.preprocessor.commit(predicate.texts[0]);
-            this.preprocessor.process("", "keydown");
+            this.preprocessor?.commit(predicate.texts[0]);
+            this.preprocessor?.process("", "keydown");
             this.clearPredicate();
           },
           false,
@@ -196,7 +219,7 @@ export default class AfrimInput {
 
   // We execute preprocessor commands in IDLE.
   private processCommand() {
-    const cmd = this.preprocessor.popQueue();
+    const cmd = this.preprocessor?.popQueue();
     const textValue = this.textFieldElement.value;
 
     this.data.cursorPos = this.data.cursorPos < 0 ? 0 : this.data.cursorPos;
@@ -239,12 +262,14 @@ export default class AfrimInput {
   }
 
   // We config the afrim ime.
-  private initAfrim(config: AfrimConfig) {
-    this.preprocessor = new Preprocessor(config.data, 64);
-    this.translator = new Translator(config.translation, false);
+  private async initAfrim(config: AfrimConfig) {
+    const afrim = await require("afrim-js");
+
+    this.preprocessor = new afrim.Preprocessor(config.data, 64);
+    this.translator = new afrim.Translator(config.translation, false);
 
     for (let e of Object.entries(config.translators)) {
-      this.translator.register(e[0], e[1]);
+      this.translator?.register(e[0], e[1]);
     }
   }
 
@@ -253,7 +278,7 @@ export default class AfrimInput {
     this.textFieldElement.addEventListener(
       "keyup",
       (event) => {
-        this.data.cursorPos = this.textFieldElement.selectionEnd;
+        this.data.cursorPos = this.textFieldElement.selectionEnd ?? 0;
 
         // We manage special keys.
         if (event.ctrlKey) {
@@ -277,7 +302,7 @@ export default class AfrimInput {
           else if (event.code == "Space") {
             var predicate = this.data.predicates[this.data.predicateId];
 
-            if (predicate) this.preprocessor.commit(predicate.texts[0]);
+            if (predicate) this.preprocessor?.commit(predicate.texts[0]);
             this.clearPredicate();
           } else if (
             event.code == "ControlLeft" ||
@@ -292,15 +317,15 @@ export default class AfrimInput {
         if (event.key == "GroupPrevious" || event.key == "GroupNext") return;
         if (this.data.isIdle) return;
 
-        const changed = this.preprocessor.process(event.key, "keydown");
-        const input = this.preprocessor.getInput();
+        const changed = this.preprocessor?.process(event.key, "keydown");
+        const input = this.preprocessor?.getInput() || "";
 
         // We update the predicates if input changed.
         if (!changed) return;
 
         this.tooltipInputElement.innerText = "📝 " + input;
 
-        const predicates = this.translator.translate(input);
+        const predicates = this.translator?.translate(input);
         this.loadPredicates(predicates);
         this.updatePredicate();
       },
@@ -343,7 +368,7 @@ export default class AfrimInput {
         event,
         () => {
           this.tooltipElement.classList.add("is-active");
-          this.preprocessor.process("", "keydown");
+          this.preprocessor?.process("", "keydown");
           this.clearPredicate();
         },
         false,
@@ -361,8 +386,8 @@ export default class AfrimInput {
     cancelAnimationFrame(this.animation);
 
     this.textFieldElement.replaceWith(this.textFieldElement.cloneNode(true));
-    this.translator.free();
-    this.preprocessor.free();
+    this.translator?.free();
+    this.preprocessor?.free();
 
     delete this.textFieldElement.dataset.lock;
   }

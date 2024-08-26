@@ -1,11 +1,12 @@
 "use strict";
 
-import { convertTomlToJson } from "afrim-js";
 import ky from "ky";
 
 // Convert TOML to JSON.
-export function tomlToJson(data: string) {
-  return convertTomlToJson(data);
+export async function tomlToJson(data: string) {
+  const afrim = await require("afrim-js")
+  
+  return afrim.convertTomlToJson(data);
 }
 
 // Make a http get request.
