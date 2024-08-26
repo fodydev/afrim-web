@@ -10,6 +10,14 @@
 
 </div>
 
+## Lite Version
+
+We also offer a lite version of this library for those who need a more lightweight solution.
+
+You can find it here [npm/afrim-input-lite](https://www.npmjs.com/package/afrim-input-lite).
+
+**Note:** This version is based on afrim-lite. Confer [github/pythonbrad/afrim-lite](https://github.com/pythonbrad/afrim-js?tab=readme-ov-file#lite-version)
+
 ## 🚀 Usage
 
 In its simplest case, `afrim-input` can be initialised with a single line of Javascript:
