@@ -4,8 +4,8 @@ import ky from "ky";
 
 // Convert TOML to JSON.
 export async function tomlToJson(data: string) {
-  const afrim = await require("afrim-js")
-  
+  const afrim = await require("afrim-js");
+
   return afrim.convertTomlToJson(data);
 }
 
