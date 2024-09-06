@@ -16,7 +16,7 @@ We also offer a lite version of this library for those who need a more lightweig
 
 You can find it here [npm/afrim-input-lite](https://www.npmjs.com/package/afrim-input-lite).
 
-**Note:** This version is based on afrim-lite. Confer [github/pythonbrad/afrim-lite](https://github.com/pythonbrad/afrim-js?tab=readme-ov-file#lite-version)
+**Note:** This version is based on afrim-lite. Confer [github/fodydev/afrim-lite](https://github.com/fodydev/afrim-js?tab=readme-ov-file#lite-version)
 
 ## 🚀 Usage
 
@@ -29,7 +29,7 @@ new Afrim({
   tooltipElementID: "tooltip",
   tooltipInputElementID: "tooltip-input",
   tooltipPredicatesElementID: "tooltip-predicates",
-  configUrl: `https://raw.githubusercontent.com/pythonbrad/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/gez/gez.toml`,
+  configUrl: `https://raw.githubusercontent.com/fodydev/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/gez/gez.toml`,
 });
 ```
 

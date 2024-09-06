@@ -31,7 +31,7 @@
   "bugs": {
     "url": "https://fodydev.github.io/afrim-web"
   },
-  "homepage": "https://github.com/pythonbrad/afrim-web#readme",
+  "homepage": "https://github.com/fodydev/afrim-web#readme",
   "devDependencies": {
     "prettier": "3.2.5"
   }

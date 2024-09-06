@@ -21,9 +21,9 @@
   "author": "Brady Fomegne <brady.fomegne@outlook.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pythonbrad/afrim-web/issues"
+    "url": "https://github.com/fodydev/afrim-web/issues"
   },
-  "homepage": "https://github.com/pythonbrad/afrim-web#readme",
+  "homepage": "https://github.com/fodydev/afrim-web#readme",
   "dependencies": {
     "afrim-js": "^0.4.0",
     "ky": "^1.2.4",

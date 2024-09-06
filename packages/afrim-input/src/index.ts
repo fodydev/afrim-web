@@ -60,7 +60,7 @@ export default class AfrimInput {
       tooltipAdjustLeft: 0,
       tooltipAdjustTop: 0,
       configUrl:
-        "https://raw.githubusercontent.com/pythonbrad/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/gez/gez.toml",
+        "https://raw.githubusercontent.com/fodydev/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/gez/gez.toml",
     };
 
     // merge the options passed in with our default options
