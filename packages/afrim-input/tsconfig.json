@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "lib": ["dom", "es2020"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "target": "es2020",
+    // Enhance strictness.bootstrap
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "strict": true
+  }
+}

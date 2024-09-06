@@ -6,6 +6,5 @@ import("./index.js")
     if (process.env.NODE_ENV !== "production") {
       console.log("[afrim-playground] Looks like we are in development mode!");
     }
-    window.Afrim = o.Afrim;
   })
   .catch((e) => console.error("Error importing `index.js`:", e));

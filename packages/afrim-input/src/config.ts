@@ -2,19 +2,19 @@
 
 import { httpGet, tomlToJson } from "./utils";
 
-// Load the afrim configuration through an URL.
+// Handle the Afrim configuration.
 export class AfrimConfig {
-  config = Object({
-    data: Object({}),
-    dictionary: Object({}),
-    translators: Object({}),
-  });
+  data: { [key: string]: string } = {};
+  translation: { [key: string]: string[] } = {};
+  translators: { [key: string]: string } = {};
 
+  // Initialize an AfrimConfig instance.
   constructor() {}
 
-  async loadFromUrl(configUrl) {
+  // Load the configuration file from an URL.
+  async loadFromUrl(configUrl: string) {
     const data = await httpGet(configUrl);
-    const content = tomlToJson(data);
+    const content = await tomlToJson(data);
     let auto_capitalize = false;
 
     if (content.has("core")) {
@@ -28,7 +28,7 @@ export class AfrimConfig {
 
         // We extract the translation.
         if (typeof value == "string") {
-          this.config.dictionary[key] = [value];
+          this.translation[key] = [value];
         } else if (value.has("path")) {
           await this.loadFromUrl(new URL(value.get("path"), configUrl).href);
         } else if (value.has("alias")) {
@@ -41,9 +41,9 @@ export class AfrimConfig {
           }
 
           for (const alias of value.get("alias")) {
-            this.config.dictionary[alias] = data;
+            this.translation[alias] = data;
           }
-          this.config.dictionary[key] = data;
+          this.translation[key] = data;
         } else {
           throw new Error(`load config error: ${value} unexpected`);
         }
@@ -57,24 +57,23 @@ export class AfrimConfig {
         const value = data[1];
 
         if (typeof value == "string") {
-          this.config.data[key] = value;
+          this.data[key] = value;
         } else if (value.has("path")) {
           await this.loadFromUrl(new URL(value.get("path"), configUrl).href);
         } else if (value.has("alias")) {
           const data = value.get("value");
           for (const alias of value.get("alias")) {
-            this.config.data[alias] = data;
+            this.data[alias] = data;
 
             if (auto_capitalize) {
-              this.config.data[data[0].toUpperCase() + data.slice(1)] =
+              this.data[data[0].toUpperCase() + data.slice(1)] =
                 data.toUpperCase();
             }
           }
-          this.config.data[key] = data;
+          this.data[key] = data;
 
           if (auto_capitalize) {
-            this.config.data[key[0].toUpperCase() + key.slice(1)] =
-              data.toUpperCase();
+            this.data[key[0].toUpperCase() + key.slice(1)] = data.toUpperCase();
           }
         } else {
           throw new Error(`load config error: ${value} unexpected`);
@@ -89,7 +88,7 @@ export class AfrimConfig {
         const value = translator[1];
         const data = await httpGet(new URL(value, configUrl).href);
 
-        this.config.translators[key] = data;
+        this.translators[key] = data;
       }
     }
   }

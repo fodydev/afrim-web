@@ -18,9 +18,6 @@
   ],
   "author": "Brady Fomegne <brady.fomegne@outlook.com>",
   "license": "MIT",
-  "dependencies": {
-    "afrim-input": "file:../afrim-input"
-  },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
     "webpack": "^5.88.2",
