@@ -143,6 +143,11 @@ export default class AfrimInput {
       },
       (err) => {
         console.error(`Error downloading configuration file: ${err}`);
+
+        // We release the textfield
+        this.textFieldElement.disabled = false;
+        this.downloadStatusElement.hidden = true;
+        this.textFieldElement.dataset.lock = "false";
       },
     );
   }
