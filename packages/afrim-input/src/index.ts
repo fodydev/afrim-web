@@ -142,7 +142,7 @@ export default class AfrimInput {
         this.downloadStatusElement.hidden = true;
       },
       (err) => {
-        alert(`Error downloading configuration file: ${err}`);
+        console.error(`Error downloading configuration file: ${err}`);
       },
     );
   }
