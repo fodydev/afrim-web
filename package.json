@@ -22,13 +22,11 @@
   },
   "keywords": [
     "afrim",
-    "wasm",
-    "rust",
     "ime"
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://fodydev.github.io/afrim-web"
+    "url": "https://github.com/fodydev/afrim-web/issues"
   },
   "homepage": "https://github.com/fodydev/afrim-web#readme",
   "devDependencies": {

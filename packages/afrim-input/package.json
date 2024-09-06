@@ -14,8 +14,6 @@
   },
   "keywords": [
     "afrim",
-    "wasm",
-    "rust",
     "ime"
   ],
   "author": "Brady Fomegne <brady.fomegne@outlook.com>",
@@ -25,7 +23,7 @@
   },
   "homepage": "https://github.com/fodydev/afrim-web#readme",
   "dependencies": {
-    "afrim-js": "^0.4.0",
+    "afrim": "^0.4.0",
     "ky": "^1.2.4",
     "textarea-caret": "^3.1.0"
   },
