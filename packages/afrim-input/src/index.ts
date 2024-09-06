@@ -1,6 +1,6 @@
 "use strict";
 
-import type { Preprocessor, Translator } from "afrim-js";
+import type { Preprocessor, Translator } from "afrim";
 import { AfrimConfig } from "./config";
 
 type Option = {
@@ -268,7 +268,7 @@ export default class AfrimInput {
 
   // We config the afrim ime.
   private async initAfrim(config: AfrimConfig) {
-    const afrim = await require("afrim-js");
+    const afrim = await require("afrim");
 
     this.preprocessor = new afrim.Preprocessor(config.data, 64);
     this.translator = new afrim.Translator(config.translation, false);

@@ -12,8 +12,6 @@
   },
   "keywords": [
     "afrim",
-    "wasm",
-    "rust",
     "ime"
   ],
   "author": "Brady Fomegne <brady.fomegne@outlook.com>",
