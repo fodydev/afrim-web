@@ -199,6 +199,7 @@
     </div>
     <!-- Maybe your are wondering why we aren't using async and defer. -->
     <!-- It's not yet supported by some webbrowsers -->
+    <script type="text/javascript" src="./afrim_input.js"></script>
     <script type="text/javascript" src="./index.js"></script>
     <script type="text/javascript">
       document.addEventListener("DOMContentLoaded", () => {
@@ -256,22 +257,16 @@
         }
 
         // Wait the afrim to be available.
-        (function initAfrim() {
-          if (window.Afrim) {
-            new Afrim({
-              textFieldElementID: "textfield",
-              downloadStatusElementID: "download-status",
-              tooltipElementID: "tooltip",
-              tooltipInputElementID: "tooltip-input",
-              tooltipPredicatesElementID: "tooltip-predicates",
-              configUrl: `https://raw.githubusercontent.com/pythonbrad/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/${lang}/${lang}.toml`,
-              tooltipAdjustLeft: 25,
-              tooltipAdjustTop: 125,
-            });
-            return;
-          }
-          requestAnimationFrame(initAfrim);
-        })();
+        new AfrimInput({
+          textFieldElementID: "textfield",
+          downloadStatusElementID: "download-status",
+          tooltipElementID: "tooltip",
+          tooltipInputElementID: "tooltip-input",
+          tooltipPredicatesElementID: "tooltip-predicates",
+          configUrl: `https://raw.githubusercontent.com/fodydev/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/${lang}/${lang}.toml`,
+          tooltipAdjustLeft: 25,
+          tooltipAdjustTop: 125,
+        });
       });
     </script>
   </body>

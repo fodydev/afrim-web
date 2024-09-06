@@ -2,7 +2,6 @@
   "name": "afrim-input",
   "version": "0.1.1",
   "description": "A library that simplify the deployment of Afrim in any text field.",
-  "main": "./dist/afrim_input.js",
   "files": ["dist"],
   "scripts": {
     "bundle": "webpack --config webpack.prod.js"

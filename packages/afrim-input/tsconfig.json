@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "declarationMap": true,
-    "declaration": true,
-    "emitDeclarationOnly": false,
     "esModuleInterop": true,
     "lib": ["dom", "es2020"],
     "module": "commonjs",

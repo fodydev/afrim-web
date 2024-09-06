@@ -12,6 +12,9 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [{ from: "src/index.html" }],
     }),
+    new CopyWebpackPlugin({
+      patterns: [{ from: "../afrim-input/dist" }],
+    }),
   ],
 
   experiments: {
