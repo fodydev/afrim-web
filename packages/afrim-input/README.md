@@ -23,7 +23,7 @@ You can find it here [npm/afrim-input-lite](https://www.npmjs.com/package/afrim-
 In its simplest case, `afrim-input` can be initialised with a single line of Javascript:
 
 ```js
-new Afrim({
+new AfrimInput({
   textFieldElementID: "textfield",
   downloadStatusElementID: "download-status",
   tooltipElementID: "tooltip",
