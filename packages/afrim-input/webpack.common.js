@@ -25,9 +25,7 @@ module.exports = {
     clean: true,
     globalObject: "this",
     library: {
-      //name: "AfrimInput",
       type: "umd",
-      // export: "default",
     },
     umdNamedDefine: true,
     webassemblyModuleFilename: "[hash].wasm",

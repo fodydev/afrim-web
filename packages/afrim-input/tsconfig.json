@@ -14,6 +14,9 @@
     "types": ["node"],
     "noImplicitReturns": true,
     "noUnusedLocals": true,
-    "strict": true
+    "strict": true,
+    "paths": {
+      "afrim": ["./node_modules/afrim/afrim.d.ts"]
+    }
   }
 }
