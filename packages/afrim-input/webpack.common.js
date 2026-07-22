@@ -6,7 +6,12 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: "ts-loader",
+        use: {
+          loader: "ts-loader",
+          options: {
+            transpileOnly: true,
+          },
+        },
         exclude: /node_modules/,
       },
     ],
@@ -20,11 +25,17 @@ module.exports = {
     clean: true,
     globalObject: "this",
     library: {
+      //name: "AfrimInput",
       type: "umd",
+      // export: "default",
     },
     umdNamedDefine: true,
+    webassemblyModuleFilename: "[hash].wasm",
   },
   experiments: {
     asyncWebAssembly: true,
+  },
+  cache: {
+    type: "filesystem",
   },
 };

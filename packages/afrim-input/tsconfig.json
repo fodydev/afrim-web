@@ -3,13 +3,15 @@
     "allowJs": true,
     "esModuleInterop": true,
     "lib": ["dom", "es2020"],
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "noImplicitAny": true,
     "outDir": "./dist/",
+    "declaration": true,
+    "declarationMap": true,
     "sourceMap": true,
     "target": "es2020",
-    // Enhance strictness.bootstrap
+    "types": ["node"],
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "strict": true
