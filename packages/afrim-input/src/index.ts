@@ -42,6 +42,7 @@ export default class AfrimInput {
     predicateId: number;
     pageSize: number;
     isIdle: boolean;
+    isBackspacePressed: boolean;
     cursorPos: number;
     options: Option;
   };
@@ -111,6 +112,7 @@ export default class AfrimInput {
       predicateId: 0,
       pageSize: 5,
       isIdle: false,
+      isBackspacePressed: false,
       cursorPos: 0,
       options: options,
     };
@@ -230,11 +232,14 @@ export default class AfrimInput {
     this.data.cursorPos = this.data.cursorPos < 0 ? 0 : this.data.cursorPos;
 
     if (cmd) {
-      if (cmd == "Delete") {
+      if (cmd.Delete != undefined) {
+        let step = cmd.Delete.length ?? 1;
+        step -= this.data.isBackspacePressed ? 1 : 0;
+        this.data.isBackspacePressed = false;
         this.textFieldElement.value =
-          textValue.substring(0, this.data.cursorPos - 1) +
+          textValue.substring(0, this.data.cursorPos - step) +
           textValue.substring(this.data.cursorPos, textValue.length);
-        this.data.cursorPos--;
+        this.data.cursorPos -= step;
         this.restoreCursorPosition();
       } else if (cmd == "Pause") {
         this.data.isIdle = true;
@@ -271,7 +276,7 @@ export default class AfrimInput {
     const afrim = await require("afrim");
 
     this.preprocessor = new afrim.Preprocessor(config.data, 64);
-    this.translator = new afrim.Translator(config.translation, false);
+    this.translator = new afrim.Translator(config.translation, false, 0.7);
 
     for (let e of Object.entries(config.translators)) {
       this.translator?.register(e[0], e[1]);
@@ -321,6 +326,10 @@ export default class AfrimInput {
 
         if (event.key == "GroupPrevious" || event.key == "GroupNext") return;
         if (this.data.isIdle) return;
+
+        if (event.key == "Backspace") {
+          this.data.isBackspacePressed = true;
+        }
 
         const changed = this.preprocessor?.process(event.key, "keydown");
         const input = this.preprocessor?.getInput() || "";

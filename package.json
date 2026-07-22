@@ -30,6 +30,6 @@
   },
   "homepage": "https://github.com/fodydev/afrim-web#readme",
   "devDependencies": {
-    "prettier": "3.5.3"
+    "prettier": "3.9.6"
   }
 }
