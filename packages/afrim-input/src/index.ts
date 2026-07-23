@@ -331,7 +331,7 @@ export default class AfrimInput {
         const changed = this.preprocessor?.process(event.key, "keydown");
         const input = this.preprocessor?.getInput() || "";
 
-	// Process pending commands.
+        // Process pending commands.
         while (this.processCommand());
 
         // We update the predicates if input changed.
