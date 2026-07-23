@@ -223,41 +223,41 @@ export default class AfrimInput {
   // We execute preprocessor commands.
   private processCommand(): any {
     let cmd;
-   
+
     while ((cmd = this.preprocessor?.popQueue()) !== "NOP") {
-    const textValue = this.textFieldElement.value;
+      const textValue = this.textFieldElement.value;
 
-    this.data.cursorPos = this.data.cursorPos < 0 ? 0 : this.data.cursorPos;
+      this.data.cursorPos = this.data.cursorPos < 0 ? 0 : this.data.cursorPos;
 
-    if (!cmd) {
-      return false;
-    }
-
-    if (cmd.Delete != undefined) {
-      let step = cmd.Delete.length ?? 1;
-      step -= this.data.isBackspacePressed ? 1 : 0;
-      this.data.isBackspacePressed = false;
-      this.textFieldElement.value =
-        textValue.substring(0, this.data.cursorPos - step) +
-        textValue.substring(this.data.cursorPos, textValue.length);
-      this.data.cursorPos -= step;
-      this.restoreCursorPosition();
-    } else if (cmd == "Pause") {
-      this.data.isIdle = true;
-    } else if (cmd == "Resume") {
-      this.data.isIdle = false;
-    } else if (cmd.CommitText) {
-      this.textFieldElement.value =
-        textValue.substring(0, this.data.cursorPos) +
-        cmd.CommitText +
-        textValue.substring(this.data.cursorPos, textValue.length);
-      this.data.cursorPos += cmd.CommitText.length;
-      this.restoreCursorPosition();
-    } else {
-      if (process.env.NODE_ENV !== "production") {
-        console.error(`afrim command "${cmd}" unsupported.`);
+      if (!cmd) {
+        return false;
       }
-    }
+
+      if (cmd.Delete != undefined) {
+        let step = cmd.Delete.length ?? 1;
+        step -= this.data.isBackspacePressed ? 1 : 0;
+        this.data.isBackspacePressed = false;
+        this.textFieldElement.value =
+          textValue.substring(0, this.data.cursorPos - step) +
+          textValue.substring(this.data.cursorPos, textValue.length);
+        this.data.cursorPos -= step;
+        this.restoreCursorPosition();
+      } else if (cmd == "Pause") {
+        this.data.isIdle = true;
+      } else if (cmd == "Resume") {
+        this.data.isIdle = false;
+      } else if (cmd.CommitText) {
+        this.textFieldElement.value =
+          textValue.substring(0, this.data.cursorPos) +
+          cmd.CommitText +
+          textValue.substring(this.data.cursorPos, textValue.length);
+        this.data.cursorPos += cmd.CommitText.length;
+        this.restoreCursorPosition();
+      } else {
+        if (process.env.NODE_ENV !== "production") {
+          console.error(`afrim command "${cmd}" unsupported.`);
+        }
+      }
     }
   }
 
