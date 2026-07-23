@@ -251,6 +251,7 @@
         var configUrl;
         if ((configUrl = window.location.search.match(/configUrl=(.*)/))) {
           configUrl = configUrl[1];
+          selectedLang = null;
         } else {
           configUrl = `https://raw.githubusercontent.com/fodydev/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/${selectedLang}/${selectedLang}.toml`;
         }
