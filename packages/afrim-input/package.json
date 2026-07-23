@@ -1,6 +1,6 @@
 {
   "name": "afrim-input",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A library that simplify the deployment of Afrim in any text field.",
   "main": "dist/afrim_input.js",
   "types": "dist/afrim_input.d.ts",
