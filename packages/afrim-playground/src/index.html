@@ -232,9 +232,15 @@
         const langData = Object.entries({
           am: "Amharic",
           bax: "Bamun",
+          byv: "Medumba",
+          clafrica: "Clafica",
+          ethiopic: "Ethiopic",
           ewo: "Ewondo",
           fmp: "Nufi",
           gez: "Geez",
+          telex: "Vietnam (telex)",
+          vie: "Vietnam (telex & vni)",
+          vni: "Vietnam (vni only)",
         });
 
         // Set the language if default configutation url.
@@ -253,7 +259,7 @@
           configUrl = configUrl[1];
           selectedLang = null;
         } else {
-          configUrl = `https://raw.githubusercontent.com/fodydev/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/${selectedLang}/${selectedLang}.toml`;
+          configUrl = `https://raw.githubusercontent.com/fodydev/afrim-data/8d60acbeefc9bfc5e07387b1953b178de27e15f2/${selectedLang}/${selectedLang}.toml`;
         }
 
         // Display language lists.
