@@ -47,8 +47,6 @@ export default class AfrimInput {
     options: Option;
   };
 
-  private animation: number = 0;
-
   // Initialize the Afrim Input instance.
   constructor(options: Option) {
     let defaultOptions: Option = {
@@ -202,6 +200,7 @@ export default class AfrimInput {
           event,
           () => {
             this.preprocessor?.commit(predicate.texts[0]);
+            this.processCommand();
             this.preprocessor?.process("", "keydown");
             this.clearPredicate();
           },
@@ -222,8 +221,10 @@ export default class AfrimInput {
   }
 
   // We execute preprocessor commands.
-  private processCommand(): boolean {
-    const cmd = this.preprocessor?.popQueue();
+  private processCommand(): any {
+    let cmd;
+   
+    while ((cmd = this.preprocessor?.popQueue()) !== "NOP") {
     const textValue = this.textFieldElement.value;
 
     this.data.cursorPos = this.data.cursorPos < 0 ? 0 : this.data.cursorPos;
@@ -245,7 +246,6 @@ export default class AfrimInput {
       this.data.isIdle = true;
     } else if (cmd == "Resume") {
       this.data.isIdle = false;
-    } else if (cmd == "NOP") {
     } else if (cmd.CommitText) {
       this.textFieldElement.value =
         textValue.substring(0, this.data.cursorPos) +
@@ -258,8 +258,7 @@ export default class AfrimInput {
         console.error(`afrim command "${cmd}" unsupported.`);
       }
     }
-
-    return cmd != "NOP";
+    }
   }
 
   private async loadConfigFromUrl(configUrl: string) {
@@ -332,7 +331,7 @@ export default class AfrimInput {
         const input = this.preprocessor?.getInput() || "";
 
         // Process pending commands.
-        while (this.processCommand());
+        this.processCommand();
 
         // We update the predicates if input changed.
         if (!changed) return;
@@ -397,8 +396,6 @@ export default class AfrimInput {
 
   // Interrupt the Afrim has detach it from the linked textfield.
   kill() {
-    cancelAnimationFrame(this.animation);
-
     this.textFieldElement.replaceWith(this.textFieldElement.cloneNode(true));
     this.translator?.free();
     this.preprocessor?.free();
