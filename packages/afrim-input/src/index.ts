@@ -136,9 +136,6 @@ export default class AfrimInput {
         this.listenMouse();
         this.listenTextFieldState();
 
-        // We start the processor.
-        this.processCommand();
-
         // We mark the text field available.
         this.textFieldElement.disabled = false;
         this.downloadStatusElement.hidden = true;
@@ -224,56 +221,58 @@ export default class AfrimInput {
     );
   }
 
-  // We execute preprocessor commands in IDLE.
-  private processCommand() {
+  // We execute preprocessor commands.
+  private processCommand(): boolean {
     const cmd = this.preprocessor?.popQueue();
     const textValue = this.textFieldElement.value;
 
     this.data.cursorPos = this.data.cursorPos < 0 ? 0 : this.data.cursorPos;
 
-    if (cmd) {
-      if (cmd.Delete != undefined) {
-        let step = cmd.Delete.length ?? 1;
-        step -= this.data.isBackspacePressed ? 1 : 0;
-        this.data.isBackspacePressed = false;
-        this.textFieldElement.value =
-          textValue.substring(0, this.data.cursorPos - step) +
-          textValue.substring(this.data.cursorPos, textValue.length);
-        this.data.cursorPos -= step;
-        this.restoreCursorPosition();
-      } else if (cmd == "Pause") {
-        this.data.isIdle = true;
-      } else if (cmd == "Resume") {
-        this.data.isIdle = false;
-      } else if (cmd == "NOP") {
-      } else if (cmd.CommitText) {
-        this.textFieldElement.value =
-          textValue.substring(0, this.data.cursorPos) +
-          cmd.CommitText +
-          textValue.substring(this.data.cursorPos, textValue.length);
-        this.data.cursorPos += cmd.CommitText.length;
-        this.restoreCursorPosition();
-      } else {
-        if (process.env.NODE_ENV !== "production") {
-          console.error(`afrim command "${cmd}" unsupported.`);
-        }
+    if (!cmd) {
+      return false;
+    }
+
+    if (cmd.Delete != undefined) {
+      let step = cmd.Delete.length ?? 1;
+      step -= this.data.isBackspacePressed ? 1 : 0;
+      this.data.isBackspacePressed = false;
+      this.textFieldElement.value =
+        textValue.substring(0, this.data.cursorPos - step) +
+        textValue.substring(this.data.cursorPos, textValue.length);
+      this.data.cursorPos -= step;
+      this.restoreCursorPosition();
+    } else if (cmd == "Pause") {
+      this.data.isIdle = true;
+    } else if (cmd == "Resume") {
+      this.data.isIdle = false;
+    } else if (cmd == "NOP") {
+    } else if (cmd.CommitText) {
+      this.textFieldElement.value =
+        textValue.substring(0, this.data.cursorPos) +
+        cmd.CommitText +
+        textValue.substring(this.data.cursorPos, textValue.length);
+      this.data.cursorPos += cmd.CommitText.length;
+      this.restoreCursorPosition();
+    } else {
+      if (process.env.NODE_ENV !== "production") {
+        console.error(`afrim command "${cmd}" unsupported.`);
       }
     }
 
-    this.animation = requestAnimationFrame(() => this.processCommand());
+    return cmd != "NOP";
   }
 
   private async loadConfigFromUrl(configUrl: string) {
     // We download the datalang.
     let afrimConfig = new AfrimConfig();
-    await afrimConfig.loadFromUrl(configUrl);
+    await afrimConfig.loadFromUrl(configUrl, this.downloadStatusElement);
 
     return afrimConfig;
   }
 
   // We config the afrim ime.
   private async initAfrim(config: AfrimConfig) {
-    const afrim = await require("afrim");
+    const afrim = await import("afrim");
 
     this.preprocessor = new afrim.Preprocessor(config.data, 64);
     this.translator = new afrim.Translator(config.translation, false, 0.7);
@@ -320,8 +319,6 @@ export default class AfrimInput {
           ) {
             this.data.isIdle = !this.data.isIdle;
           }
-
-          return;
         }
 
         if (event.key == "GroupPrevious" || event.key == "GroupNext") return;
@@ -333,6 +330,9 @@ export default class AfrimInput {
 
         const changed = this.preprocessor?.process(event.key, "keydown");
         const input = this.preprocessor?.getInput() || "";
+
+        // Process pending commands.
+        while (this.processCommand());
 
         // We update the predicates if input changed.
         if (!changed) return;

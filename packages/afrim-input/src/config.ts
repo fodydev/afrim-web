@@ -12,8 +12,8 @@ export class AfrimConfig {
   constructor() {}
 
   // Load the configuration file from an URL.
-  async loadFromUrl(configUrl: string) {
-    const data = await httpGet(configUrl);
+  async loadFromUrl(configUrl: string, downloadStatusElement: HTMLElement) {
+    const data = await httpGet(configUrl, downloadStatusElement);
     const content = await tomlToJson(data);
     let auto_capitalize = false;
 
@@ -30,7 +30,10 @@ export class AfrimConfig {
         if (typeof value == "string") {
           this.translation[key] = [value];
         } else if (value.has("path")) {
-          await this.loadFromUrl(new URL(value.get("path"), configUrl).href);
+          await this.loadFromUrl(
+            new URL(value.get("path"), configUrl).href,
+            downloadStatusElement,
+          );
         } else if (value.has("alias")) {
           let data = null;
 
@@ -59,7 +62,10 @@ export class AfrimConfig {
         if (typeof value == "string") {
           this.data[key] = value;
         } else if (value.has("path")) {
-          await this.loadFromUrl(new URL(value.get("path"), configUrl).href);
+          await this.loadFromUrl(
+            new URL(value.get("path"), configUrl).href,
+            downloadStatusElement,
+          );
         } else if (value.has("alias")) {
           const data = value.get("value");
           for (const alias of value.get("alias")) {
@@ -86,7 +92,10 @@ export class AfrimConfig {
       for (const translator of content.get("translators")) {
         const key = translator[0];
         const value = translator[1];
-        const data = await httpGet(new URL(value, configUrl).href);
+        const data = await httpGet(
+          new URL(value, configUrl).href,
+          downloadStatusElement,
+        );
 
         this.translators[key] = data;
       }

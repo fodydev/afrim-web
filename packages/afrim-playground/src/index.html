@@ -135,6 +135,13 @@
               </tr>
             </tbody>
           </table>
+          <br />
+          <h1 class="title">How to use a custom dataset</h1>
+          <hr />
+          <span
+            >Use the url param configUrl. eg:
+            ?configUrl=https://raw.githubusercontent.com/fodydev/afrim-data/7584bc34cce93f8c52533065899d49acb42bd6d0/am/am.toml</span
+          >
         </div>
       </div>
       <!-- Hero footer: will stick at the bottom -->
@@ -229,6 +236,27 @@
           fmp: "Nufi",
           gez: "Geez",
         });
+
+        // Set the language if default configutation url.
+        var selectedLang;
+        if ((selectedLang = window.location.search.match(/lang=(\w*)/))) {
+          selectedLang = selectedLang[1];
+        } else if ((selectedLang = sessionStorage.getItem("lang"))) {
+        } else {
+          selectedLang = langData[0][0];
+        }
+        sessionStorage.setItem("lang", selectedLang);
+
+        // Set the configuration url.
+        var configUrl;
+        if ((configUrl = window.location.search.match(/configUrl=(.*)/))) {
+          configUrl = configUrl[1];
+          selectedLang = null;
+        } else {
+          configUrl = `https://raw.githubusercontent.com/fodydev/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/${selectedLang}/${selectedLang}.toml`;
+        }
+
+        // Display language lists.
         const langListElement = document.getElementById("lang-list");
         const langHTML = langListElement.innerHTML;
 
@@ -236,24 +264,17 @@
 
         for (const lang of langData) {
           const langItem = document.createElement("a");
-          langItem.className = "navbar-item";
+          langItem.classList.add("navbar-item");
+          if (lang[0] === selectedLang) {
+            langItem.classList.add("is-active");
+          }
+
           langItem.id = lang[0];
           langItem.onclick = function () {
             window.location.search = `?lang=${lang[0]}`;
           };
           langItem.textContent = lang[1];
           langListElement.appendChild(langItem);
-        }
-
-        // Set the language.
-        var lang = window.location.search.match(/lang=(\w*)/);
-        lang = lang ? lang[1] : null;
-        var lang = lang ?? sessionStorage.getItem("lang");
-        if (lang != null && langData.find((e) => e[0] == lang)) {
-          sessionStorage.setItem("lang", lang);
-        } else {
-          lang = langData[0][0];
-          sessionStorage.setItem("lang", lang);
         }
 
         // Wait the afrim to be available.
@@ -263,7 +284,7 @@
           tooltipElementID: "tooltip",
           tooltipInputElementID: "tooltip-input",
           tooltipPredicatesElementID: "tooltip-predicates",
-          configUrl: `https://raw.githubusercontent.com/fodydev/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/${lang}/${lang}.toml`,
+          configUrl: configUrl,
           tooltipAdjustLeft: 25,
           tooltipAdjustTop: 125,
         });
