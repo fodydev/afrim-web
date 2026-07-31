@@ -12,7 +12,12 @@ export class AfrimConfig {
   constructor() {}
 
   // Load the configuration file from an URL.
-  async loadFromUrl(configUrl: string, downloadStatusElement: HTMLElement) {
+  async loadFromUrl(
+    configUrl: string,
+    downloadStatusElement: HTMLElement,
+    ignoreTranslation: boolean,
+    ignoreTranslators: boolean,
+  ) {
     const data = await httpGet(configUrl, downloadStatusElement);
     const content = await tomlToJson(data);
     let auto_capitalize = false;
@@ -21,7 +26,7 @@ export class AfrimConfig {
       auto_capitalize = content.get("core").get("auto_capitalize") || false;
     }
 
-    if (content.has("translation")) {
+    if (!ignoreTranslation && content.has("translation")) {
       for (const translation of content.get("translation")) {
         const key = translation[0];
         const value = translation[1];
@@ -33,6 +38,8 @@ export class AfrimConfig {
           await this.loadFromUrl(
             new URL(value.get("path"), configUrl).href,
             downloadStatusElement,
+            ignoreTranslation,
+            ignoreTranslators,
           );
         } else if (value.has("alias")) {
           let data = null;
@@ -65,6 +72,8 @@ export class AfrimConfig {
           await this.loadFromUrl(
             new URL(value.get("path"), configUrl).href,
             downloadStatusElement,
+            ignoreTranslation,
+            ignoreTranslators,
           );
         } else if (value.has("alias")) {
           const data = value.get("value");
@@ -88,7 +97,7 @@ export class AfrimConfig {
     }
 
     // We extract the translators.
-    if (content.has("translators")) {
+    if (!ignoreTranslators && content.has("translators")) {
       for (const translator of content.get("translators")) {
         const key = translator[0];
         const value = translator[1];
