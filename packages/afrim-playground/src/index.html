@@ -407,7 +407,7 @@
         const urlTranslation = new URL(window.location).searchParams.get(
           "dict",
         );
-        if (urlTranslation) {
+        if (urlTranslation !== null) {
           toggleTranslation.checked =
             urlTranslation.match(/^(on|yes|1|true)$/) != null;
         } else {
@@ -417,7 +417,7 @@
         const urlTranslator = new URL(window.location).searchParams.get(
           "pdict",
         );
-        if (urlTranslator) {
+        if (urlTranslator !== null) {
           toggleTranslator.checked =
             urlTranslator.match(/^(on|yes|1|true)$/) != null;
         } else {
