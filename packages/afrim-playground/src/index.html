@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="X-UA-Compatible" content="EB=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>⌨️ Afrim Web</title>
     <meta
@@ -18,13 +18,51 @@
       href="https://unpkg.com/@fortawesome/fontawesome-free@5.13.0/css/all.css"
       rel="stylesheet"
     />
+    <style>
+      kbd {
+        background-color: #f7f9fa;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        box-shadow: 0 2px 0 #cbd5e1;
+        color: #334155;
+        display: inline-block;
+        font-family: monospace;
+        font-size: 0.85em;
+        font-weight: 600;
+        padding: 2px 6px;
+        white-space: nowrap;
+      }
+      .editor-container {
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+      .toolbar {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        border-radius: 8px 8px 0 0;
+        padding: 0.75rem 1rem;
+      }
+      .textarea-custom {
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+        border: 1px solid #e9ecef;
+        font-size: 1.15rem;
+        resize: vertical;
+      }
+      .stats-bar {
+        font-size: 0.85rem;
+        color: #6c757d;
+      }
+    </style>
   </head>
   <body>
     <div>
-      <nav class="navbar is-primary">
+      <nav class="navbar is-primary mb-5">
         <div class="container">
           <div class="navbar-brand">
-            <a class="navbar-item"> ⌨️ Afrim Web</a>
+            <a class="navbar-item is-size-5 has-text-weight-bold"
+              >⌨️ Afrim Web</a
+            >
             <span class="navbar-burger burger" data-target="navbarMenuHero8">
               <span></span>
               <span></span>
@@ -33,21 +71,9 @@
           </div>
           <div id="navbarMenuHero8" class="navbar-menu">
             <div class="navbar-end">
-              <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link"> Languages </a>
-                <div class="navbar-dropdown is-boxed" id="lang-list">
-                  <a
-                    class="navbar-item"
-                    id="{{ lang_code }}"
-                    onclick="setLang('{{ lang_code }}')"
-                  >
-                    {{ lang_name }}
-                  </a>
-                </div>
-              </div>
               <span class="navbar-item">
                 <a
-                  class="button is-inverted"
+                  class="button is-inverted is-outlined"
                   href="https://github.com/fodydev/afrim-web"
                   target="_blank"
                 >
@@ -62,139 +88,232 @@
         </div>
       </nav>
     </div>
-    <!-- Hero content: will be in the middle -->
-    <div class="hero">
-      <div class="hero-body">
-        <div class="container has-text-centered">
-          <h1 class="title">Afrim Web</h1>
-          <div id="download-status" hidden>
-            <span class="subtitle is-medium">Downloading of dataset...</span>
-            <progress class="progress is-medium is-info" max="100"></progress>
-            <br />
-          </div>
-          <textarea
-            autocomplete="false"
-            id="textfield"
-            class="textarea is-medium"
-            style="height: 50vh"
-            placeholder="You can begin to type here..."
-          ></textarea>
-        </div>
-        <br />
-        <div class="container">
-          <h1 class="title">Keyboard shortcuts</h1>
-          <hr />
 
-          <table class="table is-narrow subtitle">
-            <thead>
-              <tr>
-                <th>Command</th>
-                <th>Shortcut</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Pause / Resume</td>
-                <td>
-                  <span class="tag is-primary">Ctrl Left</span>
-                  <span>+</span>
-                  <span class="tag">Ctrl Right</span>
-                </td>
-              </tr>
-              <tr>
-                <td>Clear</td>
-                <td>
-                  <span class="tag is-primary">Escape</span>
-                  <span>/</span>
-                  <span class="tag is-primary">Space</span>
-                </td>
-              </tr>
-              <tr>
-                <td>Select Next Predicate</td>
-                <td>
-                  <span class="tag is-primary">Ctrl</span>
-                  <span>+</span>
-                  <span class="tag">Shift Left</span>
-                </td>
-              </tr>
-              <tr>
-                <td>Select Previous Predicate</td>
-                <td>
-                  <span class="tag is-primary">Ctrl</span>
-                  <span>+</span>
-                  <span class="tag">Shift Right</span>
-                </td>
-              </tr>
-              <tr>
-                <td>Commit Selected Predicate</td>
-                <td>
-                  <span class="tag is-primary">Ctrl</span>
-                  <span>+</span>
-                  <span class="tag">Space</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <br />
-          <h1 class="title">How to use a custom dataset</h1>
-          <hr />
-          <span
-            >Use the url param configUrl. eg:
-            ?configUrl=https://raw.githubusercontent.com/fodydev/afrim-data/68910ab450d652f17068ab3b5b006295b5d4bda4/am/am.toml</span
+    <div class="container px-4">
+      <!-- Download Progress Header -->
+      <div
+        id="download-status"
+        class="notification is-info is-light mb-4"
+        hidden
+      >
+        <div class="is-flex is-align-items-center mb-2">
+          <span class="icon mr-2"><i class="fas fa-spinner fa-spin"></i></span>
+          <span class="has-text-weight-semibold">Downloading dataset...</span>
+        </div>
+        <progress class="progress is-small is-info" max="100"></progress>
+      </div>
+
+      <!-- Editor Card -->
+      <div class="box p-0 editor-container mb-6">
+        <!-- Editor Control Toolbar -->
+        <div
+          class="toolbar is-flex is-flex-wrap-wrap is-justify-content-space-between is-align-items-center"
+          style="gap: 1rem"
+        >
+          <!-- Left Controls: Language Select & Toggles -->
+          <div
+            class="is-flex is-flex-wrap-wrap is-align-items-center"
+            style="gap: 1.25rem"
           >
+            <div class="field mb-0">
+              <label class="label is-small mb-1">Target Language</label>
+              <div class="control">
+                <div class="select is-small">
+                  <select id="lang-select">
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature Toggles -->
+            <div class="field mb-0">
+              <label class="label is-small mb-1">Engine Features</label>
+              <div class="is-flex" style="gap: 1rem">
+                <label
+                  class="checkbox is-size-7"
+                  title="Enable/Disable word translations"
+                >
+                  <input type="checkbox" id="toggle-translation" />
+                  <strong>Dictionary</strong> (Translation)
+                </label>
+                <label
+                  class="checkbox is-size-7"
+                  title="Enable/Disable programmable dictionary rules"
+                >
+                  <input type="checkbox" id="toggle-translator" />
+                  <strong>Translator</strong> (Programmable)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Controls: Actions -->
+          <div class="buttons mb-0">
+            <button
+              class="button is-small is-light"
+              id="btn-copy"
+              title="Copy to Clipboard"
+            >
+              <span class="icon"><i class="fas fa-copy"></i></span>
+              <span>Copy</span>
+            </button>
+            <button
+              class="button is-small is-danger is-light"
+              id="btn-clear"
+              title="Clear text"
+            >
+              <span class="icon"><i class="fas fa-trash-alt"></i></span>
+              <span>Clear</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Textarea -->
+        <textarea
+          autocomplete="off"
+          id="textfield"
+          class="textarea textarea-custom"
+          style="height: 40vh"
+          placeholder="Start typing here using your chosen input method..."
+        ></textarea>
+
+        <!-- Editor Footer Stats -->
+        <div
+          class="px-3 py-2 is-flex is-justify-content-space-between stats-bar"
+        >
+          <div>
+            <span id="word-count">0 words</span> |
+            <span id="char-count">0 characters</span>
+          </div>
+          <div>
+            <span class="tag is-light is-small" id="status-tag">Ready</span>
+          </div>
         </div>
       </div>
-      <!-- Hero footer: will stick at the bottom -->
-      <div class="hero-foot">
-        <nav class="footer">
-          <div class="content is-medium has-text-centered">
-            <p>
-              <a
-                class="icon"
-                href="https://github.com/fodydev/afrim-web"
-                target="_blank"
-              >
-                <i class="fab fa-github"></i>
-              </a>
-              &nbsp;
-              <a
-                class="icon"
-                href="https://twitter.com/pythonbrad"
-                target="_blank"
-              >
-                <i class="fab fa-twitter"></i>
-              </a>
-            </p>
-            <p>
-              <strong>Afrim Web</strong> by
-              <a href="https://github.com/pythonbrad" target="_blank"
-                >Brady Fomegne</a
-              >. <br />
-              Based on
-              <a href="https://github.com/fodydev/afrim-js" target="_blank"
-                >AfrimJS</a
-              >. <br />
-              The source code is licensed
-              <a
-                href="https://opensource.org/licenses/mit-license.php"
-                target="_blank"
-                >MIT</a
-              >.
-            </p>
-            <a
-              class="button is-warning"
-              href="https://www.buymeacoffee.com/pythonbrad"
-              target="_blank"
-            >
-              <span class="icon">
-                <i class="fas fa-coffee"></i>
-              </span>
-              <span>Buy Me A Coffee</span>
-            </a>
+
+      <!-- Information & Help Section -->
+      <div class="columns">
+        <!-- Shortcuts Column -->
+        <div class="column is-7">
+          <div class="card">
+            <header class="card-header">
+              <p class="card-header-title">
+                <span class="icon mr-2"><i class="fas fa-keyboard"></i></span>
+                Keyboard Shortcuts
+              </p>
+            </header>
+            <div class="card-content p-0">
+              <table class="table is-fullwidth is-striped is-hoverable mb-0">
+                <thead>
+                  <tr>
+                    <th>Command</th>
+                    <th>Shortcut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Pause / Resume</td>
+                    <td><kbd>Ctrl Left</kbd> + <kbd>Ctrl Right</kbd></td>
+                  </tr>
+                  <tr>
+                    <td>Clear Input</td>
+                    <td><kbd>Escape</kbd> or <kbd>Space</kbd></td>
+                  </tr>
+                  <tr>
+                    <td>Select Next Predicate</td>
+                    <td><kbd>Ctrl</kbd> + <kbd>Shift Left</kbd></td>
+                  </tr>
+                  <tr>
+                    <td>Select Previous Predicate</td>
+                    <td><kbd>Ctrl</kbd> + <kbd>Shift Right</kbd></td>
+                  </tr>
+                  <tr>
+                    <td>Commit Selected Predicate</td>
+                    <td><kbd>Ctrl</kbd> + <kbd>Space</kbd></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </nav>
+        </div>
+
+        <!-- Custom Dataset Info Column -->
+        <div class="column is-5">
+          <div class="card">
+            <header class="card-header">
+              <p class="card-header-title">
+                <span class="icon mr-2"><i class="fas fa-cogs"></i></span>
+                Custom Dataset
+              </p>
+            </header>
+            <div class="card-content">
+              <p class="is-size-7 mb-3">
+                Load a custom TOML configuration by appending the
+                <code>configUrl</code> parameter to your URL:
+              </p>
+              <div class="field">
+                <div class="control">
+                  <textarea
+                    class="textarea is-small"
+                    readonly
+                    rows="3"
+                    style="font-family: monospace; font-size: 0.75rem"
+                  >
+?configUrl=https://raw.githubusercontent.com/fodydev/afrim-data/7584bc34cce93f8c52533065899d49acb42bd6d0/am/am.toml</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-6 py-5">
+      <div class="content has-text-centered">
+        <p class="mb-2">
+          <a
+            class="icon mx-2"
+            href="https://github.com/fodydev/afrim-web"
+            target="_blank"
+          >
+            <i class="fab fa-github fa-lg"></i>
+          </a>
+          <a
+            class="icon mx-2"
+            href="https://twitter.com/pythonbrad"
+            target="_blank"
+          >
+            <i class="fab fa-twitter fa-lg"></i>
+          </a>
+        </p>
+        <p class="is-size-7">
+          <strong>Afrim Web</strong> by
+          <a href="https://github.com/pythonbrad" target="_blank"
+            >Brady Fomegne</a
+          >. Powered by
+          <a href="https://github.com/fodydev/afrim-js" target="_blank"
+            >AfrimJS</a
+          >. Licensed under
+          <a
+            href="https://opensource.org/licenses/mit-license.php"
+            target="_blank"
+            >MIT</a
+          >.
+        </p>
+        <a
+          class="button is-warning is-small mt-2"
+          href="https://www.buymeacoffee.com/pythonbrad"
+          target="_blank"
+        >
+          <span class="icon"><i class="fas fa-coffee"></i></span>
+          <span>Buy Me A Coffee</span>
+        </a>
+      </div>
+    </footer>
+
+    <!-- Tooltip Element -->
     <div id="tooltip" class="dropdown" style="z-index: 999; position: absolute">
       <div class="dropdown-menu">
         <div class="dropdown-content">
@@ -204,32 +323,28 @@
         </div>
       </div>
     </div>
-    <!-- Maybe your are wondering why we aren't using async and defer. -->
-    <!-- It's not yet supported by some webbrowsers -->
+
+    <!-- Scripts -->
     <script type="text/javascript" src="./afrim_input.js"></script>
     <script type="text/javascript" src="./index.js"></script>
     <script type="text/javascript">
       document.addEventListener("DOMContentLoaded", () => {
-        // Get all "navbar-burger" elements
+        // --- Navbar Burger Toggle ---
         const $navbarBurgers = Array.prototype.slice.call(
           document.querySelectorAll(".navbar-burger"),
           0,
         );
-        // Add a click event on each of them
         $navbarBurgers.forEach((el) => {
-          el.addEventListener("click", () => {
-            // Get the target from the "data-target" attribute
+          el.addEventListener("pointerup", () => {
             const target = el.dataset.target;
             const $target = document.getElementById(target);
-
-            // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
             el.classList.toggle("is-active");
             $target.classList.toggle("is-active");
           });
         });
 
-        // Update the datasets menu.
-        const langData = Object.entries({
+        // --- Data & Language Setup ---
+        const langData = {
           am: "Amharic",
           bax: "Bamun",
           byv: "Medumba",
@@ -242,58 +357,120 @@
           telex: "Vietnam (telex)",
           vie: "Vietnam (telex & vni)",
           vni: "Vietnam (vni only)",
-        });
+        };
 
-        // Set the language if default configutation url.
-        var selectedLang;
-        if ((selectedLang = window.location.search.match(/lang=(\w*)/))) {
-          selectedLang = selectedLang[1];
-        } else if ((selectedLang = sessionStorage.getItem("lang"))) {
+        // Determine current selected language
+        let selectedLang;
+        const urlLangMatch = window.location.search.match(/lang=(\w*)/);
+        if (urlLangMatch) {
+          selectedLang = urlLangMatch[1];
+        } else if (sessionStorage.getItem("lang")) {
+          selectedLang = sessionStorage.getItem("lang");
         } else {
           selectedLang = "gez";
         }
         sessionStorage.setItem("lang", selectedLang);
 
-        // Set the configuration url.
-        var configUrl;
-        if ((configUrl = window.location.search.match(/configUrl=(.*)/))) {
-          configUrl = configUrl[1];
+        // Determine Config URL
+        let configUrl;
+        const urlConfigMatch = window.location.search.match(/configUrl=(.*)/);
+        if (urlConfigMatch) {
+          configUrl = urlConfigMatch[1];
           selectedLang = null;
         } else {
           configUrl = `https://raw.githubusercontent.com/fodydev/afrim-data/68910ab450d652f17068ab3b5b006295b5d4bda4/${selectedLang}/${selectedLang}.toml`;
         }
 
-        // Display language lists.
-        const langListElement = document.getElementById("lang-list");
-        const langHTML = langListElement.innerHTML;
+        // --- Populate Language Selector ---
+        const langSelect = document.getElementById("lang-select");
+        Object.entries(langData).forEach(([code, name]) => {
+          const option = document.createElement("option");
+          option.value = code;
+          option.textContent = name;
+          if (code === selectedLang) option.selected = true;
+          langSelect.appendChild(option);
+        });
 
-        langListElement.innerHTML = "";
+        langSelect.addEventListener("change", (e) => {
+          window.location.search = `?lang=${e.target.value}`;
+        });
 
-        for (const lang of langData) {
-          const langItem = document.createElement("a");
-          langItem.classList.add("navbar-item");
-          if (lang[0] === selectedLang) {
-            langItem.classList.add("is-active");
-          }
+        // --- Feature Toggles (Translation & Translator) ---
+        const toggleTranslation = document.getElementById("toggle-translation");
+        const toggleTranslator = document.getElementById("toggle-translator");
 
-          langItem.id = lang[0];
-          langItem.onclick = function () {
-            window.location.search = `?lang=${lang[0]}`;
-          };
-          langItem.textContent = lang[1];
-          langListElement.appendChild(langItem);
+        // Load saved preferences from localStorage (default to enabled)
+        toggleTranslation.checked =
+          localStorage.getItem("afrim_translation") !== "false";
+        toggleTranslator.checked =
+          localStorage.getItem("afrim_translator") !== "false";
+
+        let engineInstance = null;
+
+        function initializeAfrim() {
+          if (engineInstance) engineInstance.kill();
+
+          const ignoreTranslation = !toggleTranslation.checked;
+          const ignoreTranslators = !toggleTranslator.checked;
+
+          // Save preference states
+          localStorage.setItem("afrim_translation", toggleTranslation.checked);
+          localStorage.setItem("afrim_translator", toggleTranslator.checked);
+
+          engineInstance = new AfrimInput({
+            textFieldElementID: "textfield",
+            downloadStatusElementID: "download-status",
+            tooltipElementID: "tooltip",
+            tooltipInputElementID: "tooltip-input",
+            tooltipPredicatesElementID: "tooltip-predicates",
+            configUrl: configUrl,
+            tooltipAdjustLeft: 20,
+            tooltipAdjustTop: 75,
+            ignoreTranslation: ignoreTranslation,
+            ignoreTranslators: ignoreTranslators,
+          });
         }
 
-        // Wait the afrim to be available.
-        new AfrimInput({
-          textFieldElementID: "textfield",
-          downloadStatusElementID: "download-status",
-          tooltipElementID: "tooltip",
-          tooltipInputElementID: "tooltip-input",
-          tooltipPredicatesElementID: "tooltip-predicates",
-          configUrl: configUrl,
-          tooltipAdjustLeft: 25,
-          tooltipAdjustTop: 125,
+        // Re-initialize engine when toggles change
+        toggleTranslation.addEventListener("change", initializeAfrim);
+        toggleTranslator.addEventListener("change", initializeAfrim);
+
+        // Initial Engine Start
+        initializeAfrim();
+
+        // --- Editor Actions & Text Counters ---
+        const textarea = document.getElementById("textfield");
+        const charCount = document.getElementById("char-count");
+        const wordCount = document.getElementById("word-count");
+        const btnClear = document.getElementById("btn-clear");
+        const btnCopy = document.getElementById("btn-copy");
+
+        function updateCounters() {
+          const text = textarea.value;
+          charCount.textContent = `${text.length} character${text.length === 1 ? "" : "s"}`;
+          const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+          wordCount.textContent = `${words} word${words === 1 ? "" : "s"}`;
+        }
+
+        textarea.addEventListener("input", updateCounters);
+
+        btnClear.addEventListener("pointerup", () => {
+          textarea.value = "";
+          updateCounters();
+          textarea.focus();
+        });
+
+        btnCopy.addEventListener("pointerup", () => {
+          if (!textarea.value) return;
+          navigator.clipboard.writeText(textarea.value).then(() => {
+            const originalHTML = btnCopy.innerHTML;
+            btnCopy.innerHTML = `<span class="icon"><i class="fas fa-check"></i></span><span>Copied!</span>`;
+            btnCopy.classList.add("is-success");
+            setTimeout(() => {
+              btnCopy.innerHTML = originalHTML;
+              btnCopy.classList.remove("is-success");
+            }, 2000);
+          });
         });
       });
     </script>

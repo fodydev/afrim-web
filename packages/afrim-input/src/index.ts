@@ -13,6 +13,8 @@ type Option = {
   tooltipAdjustLeft: number;
   tooltipAdjustTop: number;
   configUrl: string;
+  ignoreTranslation: boolean;
+  ignoreTranslators: boolean;
 };
 
 type Predicate = {
@@ -60,6 +62,8 @@ export default class AfrimInput {
       tooltipAdjustTop: 0,
       configUrl:
         "https://raw.githubusercontent.com/fodydev/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/gez/gez.toml",
+      ignoreTranslation: false,
+      ignoreTranslators: false,
     };
 
     // merge the options passed in with our default options
@@ -264,7 +268,12 @@ export default class AfrimInput {
   private async loadConfigFromUrl(configUrl: string) {
     // We download the datalang.
     let afrimConfig = new AfrimConfig();
-    await afrimConfig.loadFromUrl(configUrl, this.downloadStatusElement);
+    await afrimConfig.loadFromUrl(
+      configUrl,
+      this.downloadStatusElement,
+      this.data.options.ignoreTranslation,
+      this.data.options.ignoreTranslators,
+    );
 
     return afrimConfig;
   }
@@ -396,10 +405,10 @@ export default class AfrimInput {
 
   // Interrupt the Afrim has detach it from the linked textfield.
   kill() {
+    delete this.textFieldElement.dataset.lock;
     this.textFieldElement.replaceWith(this.textFieldElement.cloneNode(true));
+
     this.translator?.free();
     this.preprocessor?.free();
-
-    delete this.textFieldElement.dataset.lock;
   }
 }
