@@ -361,9 +361,9 @@
 
         // Determine current selected language
         let selectedLang;
-        const urlLangMatch = window.location.search.match(/lang=(\w*)/);
-        if (urlLangMatch) {
-          selectedLang = urlLangMatch[1];
+        const urlLang = new URL(window.location).searchParams.get("lang");
+        if (urlLang) {
+          selectedLang = urlLang;
         } else if (sessionStorage.getItem("lang")) {
           selectedLang = sessionStorage.getItem("lang");
         } else {
@@ -373,9 +373,11 @@
 
         // Determine Config URL
         let configUrl;
-        const urlConfigMatch = window.location.search.match(/configUrl=(.*)/);
-        if (urlConfigMatch) {
-          configUrl = urlConfigMatch[1];
+        const urlConfig = new URL(window.location).searchParams.get(
+          "configUrl",
+        );
+        if (urlConfig) {
+          configUrl = urlConfig;
           selectedLang = null;
         } else {
           configUrl = `https://raw.githubusercontent.com/fodydev/afrim-data/68910ab450d652f17068ab3b5b006295b5d4bda4/${selectedLang}/${selectedLang}.toml`;
@@ -392,18 +394,36 @@
         });
 
         langSelect.addEventListener("change", (e) => {
-          window.location.search = `?lang=${e.target.value}`;
+          let loc = new URL(window.location);
+          loc.searchParams.set("lang", e.target.value);
+          window.location = loc.href;
         });
 
         // --- Feature Toggles (Translation & Translator) ---
         const toggleTranslation = document.getElementById("toggle-translation");
         const toggleTranslator = document.getElementById("toggle-translator");
 
-        // Load saved preferences from localStorage (default to enabled)
-        toggleTranslation.checked =
-          localStorage.getItem("afrim_translation") !== "false";
-        toggleTranslator.checked =
-          localStorage.getItem("afrim_translator") !== "false";
+        // Determine the dataset loading preferences.
+        const urlTranslation = new URL(window.location).searchParams.get(
+          "dict",
+        );
+        if (urlTranslation) {
+          toggleTranslation.checked =
+            urlTranslation.match(/^(on|yes|1|true)$/) != null;
+        } else {
+          toggleTranslation.checked =
+            localStorage.getItem("afrim_translation") !== "false";
+        }
+        const urlTranslator = new URL(window.location).searchParams.get(
+          "pdict",
+        );
+        if (urlTranslator) {
+          toggleTranslator.checked =
+            urlTranslator.match(/^(on|yes|1|true)$/) != null;
+        } else {
+          toggleTranslator.checked =
+            localStorage.getItem("afrim_translator") !== "false";
+        }
 
         let engineInstance = null;
 
@@ -432,8 +452,16 @@
         }
 
         // Re-initialize engine when toggles change
-        toggleTranslation.addEventListener("change", initializeAfrim);
-        toggleTranslator.addEventListener("change", initializeAfrim);
+        toggleTranslation.addEventListener("change", (e) => {
+          let loc = new URL(window.location);
+          loc.searchParams.set("dict", e.target.checked);
+          window.location = loc.href;
+        });
+        toggleTranslator.addEventListener("change", (e) => {
+          let loc = new URL(window.location);
+          loc.searchParams.set("pdict", e.target.checked);
+          window.location = loc.href;
+        });
 
         // Initial Engine Start
         initializeAfrim();
