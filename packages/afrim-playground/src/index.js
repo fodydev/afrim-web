@@ -350,7 +350,7 @@ async function main() {
   if (!charset.length) exerciseSelect.value = "custom";
 
   if (config && settings.ime) {
-    new AfrimInput({
+    const afrimInput = new AfrimInput({
       textFieldElementID: "textfield",
       downloadStatusElementID: "download-status",
       tooltipElementID: "tooltip",
@@ -363,8 +363,16 @@ async function main() {
       ignoreTranslation: !settings.dict,
       ignoreTranslators: !settings.pdict,
     });
-    // Let Afrim attach itself to the text field first.
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    try {
+      await afrimInput.ready;
+    } catch (err) {
+      console.error("Error initializing Afrim input:", err);
+      const status = $("download-status");
+      status.classList.replace("is-info", "is-danger");
+      status.textContent =
+        "Afrim couldn't start. You can still practice with your own keyboard.";
+      status.hidden = false;
+    }
   }
 
   newRound();
