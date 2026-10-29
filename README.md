@@ -15,6 +15,13 @@
 
 </div>
 
+## ✨ Features
+
+- ⌨️ Typing practice in African writing systems (Ge'ez, Bamum, Nufi, Medumba, Ewondo, ...).
+- 🔤 Optional [Afrim](https://github.com/fodydev/afrim) keyboard: type Latin letters, get your script. A hint shows what to type next.
+- 🎲 Random letter drills built from each dataset, or your own text.
+- 📈 Live WPM, accuracy and personal best.
+
 ## 🚀 How to deploy?
 
 ```

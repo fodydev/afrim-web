@@ -15,6 +15,8 @@ type Option = {
   configUrl: string;
   ignoreTranslation: boolean;
   ignoreTranslators: boolean;
+  // An already loaded configuration, used instead of downloading configUrl.
+  config?: AfrimConfig;
 };
 
 type Predicate = {
@@ -131,7 +133,11 @@ export default class AfrimInput {
     this.textFieldElement.disabled = true;
     this.downloadStatusElement.hidden = false;
 
-    this.loadConfigFromUrl(options.configUrl).then(
+    const config = options.config
+      ? Promise.resolve(options.config)
+      : this.loadConfigFromUrl(options.configUrl);
+
+    config.then(
       async (config: AfrimConfig) => {
         await this.initAfrim(config);
         this.listenKeyboard();

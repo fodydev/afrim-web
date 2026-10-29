@@ -7,24 +7,36 @@
     <title>⌨️ Afrim Web</title>
     <meta
       name="description"
-      content="Afrim provides an online playground to try out its engine features without having to install anything."
+      content="Practice typing in African writing systems, right in your browser."
     />
     <meta name="author" content="@pythonbrad" />
     <link
       rel="stylesheet"
-      href="https://unpkg.com/bulmaswatch/sandstone/bulmaswatch.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.4/css/bulma.min.css"
     />
     <link
       href="https://unpkg.com/@fortawesome/fontawesome-free@5.13.0/css/all.css"
       rel="stylesheet"
     />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&family=Noto+Sans+Ethiopic:wght@400;600&family=Noto+Sans+Bamum&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Apply the saved theme before the page renders (default: system).
+      try {
+        const theme = localStorage.getItem("afrim_theme");
+        if (theme) document.documentElement.dataset.theme = theme;
+      } catch (e) {}
+    </script>
     <style>
+      /* Colors come from Bulma variables, so they follow light/dark mode. */
       kbd {
-        background-color: #f7f9fa;
-        border: 1px solid #cbd5e1;
+        background-color: var(--bulma-scheme-main-bis);
+        border: 1px solid var(--bulma-border);
         border-radius: 4px;
-        box-shadow: 0 2px 0 #cbd5e1;
-        color: #334155;
+        box-shadow: 0 2px 0 var(--bulma-border);
+        color: var(--bulma-text-strong);
         display: inline-block;
         font-family: monospace;
         font-size: 0.85em;
@@ -32,204 +44,325 @@
         padding: 2px 6px;
         white-space: nowrap;
       }
-      .editor-container {
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      [hidden] {
+        display: none !important;
+      }
+      .wrap {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      .page {
+        padding: 0 16px;
       }
       .toolbar {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #e9ecef;
-        border-radius: 8px 8px 0 0;
+        background-color: var(--bulma-scheme-main-bis);
+        border-bottom: 1px solid var(--bulma-border);
+        border-radius: var(--bulma-radius-large) var(--bulma-radius-large) 0 0;
         padding: 0.75rem 1rem;
       }
-      .textarea-custom {
-        border-top-left-radius: 0 !important;
-        border-top-right-radius: 0 !important;
-        border: 1px solid #e9ecef;
-        font-size: 1.15rem;
+      .target-font {
+        font-family:
+          "Noto Sans", "Noto Sans Ethiopic", "Noto Sans Bamum", sans-serif;
+        font-size: 1.4rem;
+        line-height: 1.8;
+      }
+      textarea.target-font {
         resize: vertical;
       }
-      .stats-bar {
-        font-size: 0.85rem;
-        color: #6c757d;
+      .target {
+        min-height: 3.6em;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--bulma-text-weak);
+      }
+      .target .ok {
+        color: var(--bulma-success-on-scheme);
+      }
+      .target .bad {
+        color: var(--bulma-danger-on-scheme);
+        background-color: var(--bulma-danger-soft);
+        border-radius: 2px;
+      }
+      .target .current {
+        color: var(--bulma-text-strong);
+        border-bottom: 3px solid var(--bulma-link);
+      }
+      .hint {
+        font-size: 0.9rem;
+        color: var(--bulma-text-weak);
+      }
+      .hint-char {
+        font-size: 1.3rem;
+        color: var(--bulma-text-strong);
+      }
+      .navbar.is-dark .navbar-burger {
+        color: var(--bulma-dark-invert);
+      }
+      .stats strong {
+        font-size: 1.25rem;
       }
     </style>
   </head>
   <body>
-    <div>
-      <nav class="navbar is-primary mb-5">
-        <div class="container">
-          <div class="navbar-brand">
-            <a class="navbar-item is-size-5 has-text-weight-bold"
-              >⌨️ Afrim Web</a
+    <nav class="navbar is-dark mb-5">
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-item is-size-5 has-text-weight-bold">⌨️ Afrim Web</a>
+          <div class="navbar-item ml-auto">
+            <button
+              class="button is-dark is-inverted is-outlined"
+              id="btn-theme"
+              title="Switch light / dark mode"
+              aria-label="Switch light / dark mode"
             >
-            <span class="navbar-burger burger" data-target="navbarMenuHero8">
-              <span></span>
-              <span></span>
-              <span></span>
+              <span class="icon"><i class="fas fa-moon"></i></span>
+            </button>
+          </div>
+          <a
+            role="button"
+            class="navbar-burger ml-0"
+            data-target="navbar-menu"
+            aria-label="menu"
+            aria-expanded="false"
+          >
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </a>
+        </div>
+        <div id="navbar-menu" class="navbar-menu">
+          <div class="navbar-end">
+            <span class="navbar-item">
+              <a
+                class="button is-dark is-inverted is-outlined"
+                href="https://github.com/fodydev/afrim-web"
+                target="_blank"
+              >
+                <span class="icon">
+                  <i class="fab fa-github"></i>
+                </span>
+                <span>Source Code</span>
+              </a>
             </span>
           </div>
-          <div id="navbarMenuHero8" class="navbar-menu">
-            <div class="navbar-end">
-              <span class="navbar-item">
-                <a
-                  class="button is-inverted is-outlined"
-                  href="https://github.com/fodydev/afrim-web"
-                  target="_blank"
-                >
-                  <span class="icon">
-                    <i class="fab fa-github"></i>
-                  </span>
-                  <span>Source Code</span>
-                </a>
-              </span>
-            </div>
-          </div>
         </div>
-      </nav>
-    </div>
+      </div>
+    </nav>
 
-    <div class="container px-4">
-      <!-- Download Progress Header -->
-      <div
-        id="download-status"
-        class="notification is-info is-light mb-4"
-        hidden
-      >
-        <div class="is-flex is-align-items-center mb-2">
-          <span class="icon mr-2"><i class="fas fa-spinner fa-spin"></i></span>
-          <span class="has-text-weight-semibold">Downloading dataset...</span>
-        </div>
-        <progress class="progress is-small is-info" max="100"></progress>
+    <div class="container page">
+      <section class="mb-5">
+        <h1 class="title is-4 mb-2">Learn to type in your writing system</h1>
+        <p class="subtitle is-6 has-text-grey">
+          Pick a language, type the text, and get faster every day.
+        </p>
+      </section>
+
+      <!-- Dataset download status -->
+      <div id="download-status" class="notification is-info is-light" hidden>
+        Loading dataset...
       </div>
 
-      <!-- Editor Card -->
-      <div class="box p-0 editor-container mb-6">
-        <!-- Editor Control Toolbar -->
-        <div
-          class="toolbar is-flex is-flex-wrap-wrap is-justify-content-space-between is-align-items-center"
-          style="gap: 1rem"
-        >
-          <!-- Left Controls: Language Select & Toggles -->
-          <div
-            class="is-flex is-flex-wrap-wrap is-align-items-center"
-            style="gap: 1.25rem"
-          >
-            <div class="field mb-0">
-              <label class="label is-small mb-1">Target Language</label>
-              <div class="control">
-                <div class="select is-small">
-                  <select id="lang-select">
-                    <!-- Populated dynamically -->
-                  </select>
+      <div class="box p-0 mb-5">
+        <!-- Settings -->
+        <div class="toolbar wrap is-align-items-flex-end" style="gap: 1.25rem">
+          <div class="field mb-0">
+            <label class="label is-small mb-1" for="lang-select"
+              >Language</label
+            >
+            <div class="select is-small">
+              <select id="lang-select"></select>
+            </div>
+          </div>
+          <div class="field mb-0">
+            <label class="label is-small mb-1" for="exercise-select"
+              >Exercise</label
+            >
+            <div class="select is-small">
+              <select id="exercise-select">
+                <option value="drill">Random letters</option>
+                <option value="custom">My own text</option>
+              </select>
+            </div>
+          </div>
+          <div class="field mb-0">
+            <label
+              class="checkbox"
+              title="Type with Latin letters, Afrim converts them into your writing system. Turn it off to use your own keyboard."
+            >
+              <input type="checkbox" id="toggle-ime" />
+              <strong>Afrim keyboard</strong>
+            </label>
+          </div>
+          <div id="ime-options" class="field mb-0 is-size-7" hidden>
+            <span class="has-text-grey mr-2">Suggestions:</span>
+            <label
+              class="checkbox mr-2"
+              title="Suggest words from the dictionary. Some dictionaries are big and take time to download."
+            >
+              <input type="checkbox" id="toggle-dict" /> Dictionary
+            </label>
+            <label
+              class="checkbox"
+              title="Programmable suggestions (numbers, dates...)"
+            >
+              <input type="checkbox" id="toggle-pdict" /> Translator
+            </label>
+          </div>
+        </div>
+
+        <div class="p-4">
+          <!-- Custom text -->
+          <div id="custom-panel" class="mb-4" hidden>
+            <textarea
+              id="custom-text"
+              class="textarea target-font"
+              rows="2"
+              placeholder="Paste or write any text you want to practice..."
+            ></textarea>
+            <button class="button is-small is-dark mt-2" id="btn-custom">
+              Use this text
+            </button>
+          </div>
+
+          <!-- Text to type -->
+          <div id="target" class="target target-font" lang="und"></div>
+          <p id="hint" class="hint mb-3">&nbsp;</p>
+
+          <!-- Typing area -->
+          <div style="position: relative">
+            <textarea
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              id="textfield"
+              class="textarea target-font"
+              rows="3"
+              placeholder="Start typing the text above..."
+            ></textarea>
+            <!-- Afrim suggestions -->
+            <div
+              id="tooltip"
+              class="dropdown"
+              style="z-index: 999; position: absolute"
+            >
+              <div class="dropdown-menu">
+                <div class="dropdown-content">
+                  <a class="dropdown-item" id="tooltip-input"></a>
+                  <hr class="dropdown-divider" />
+                  <div id="tooltip-predicates"></div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Feature Toggles -->
-            <div class="field mb-0">
-              <label class="label is-small mb-1">Engine Features</label>
-              <div class="is-flex" style="gap: 1rem">
-                <label
-                  class="checkbox is-size-7"
-                  title="Enable/Disable word translations"
-                >
-                  <input type="checkbox" id="toggle-translation" />
-                  <strong>Dictionary</strong> (Translation)
-                </label>
-                <label
-                  class="checkbox is-size-7"
-                  title="Enable/Disable programmable dictionary rules"
-                >
-                  <input type="checkbox" id="toggle-translator" />
-                  <strong>Translator</strong> (Programmable)
-                </label>
-              </div>
+          <progress
+            id="progress"
+            class="progress is-small is-dark mt-3 mb-3"
+            value="0"
+            max="100"
+          ></progress>
+
+          <!-- Live stats -->
+          <div
+            class="wrap is-justify-content-space-between is-align-items-center"
+            style="gap: 1rem"
+          >
+            <div class="wrap stats" style="gap: 1.5rem">
+              <div><strong id="stat-wpm">0</strong> WPM</div>
+              <div><strong id="stat-accuracy">100%</strong> accuracy</div>
+              <div><strong id="stat-time">0s</strong></div>
+            </div>
+            <div class="buttons mb-0">
+              <button class="button is-small" id="btn-restart">
+                <span class="icon"><i class="fas fa-redo"></i></span>
+                <span>Restart</span>
+              </button>
+              <button class="button is-small is-dark" id="btn-next">
+                <span>New text</span>
+                <span class="icon"><i class="fas fa-arrow-right"></i></span>
+              </button>
             </div>
           </div>
 
-          <!-- Right Controls: Actions -->
-          <div class="buttons mb-0">
-            <button
-              class="button is-small is-light"
-              id="btn-copy"
-              title="Copy to Clipboard"
+          <!-- Results -->
+          <div
+            id="results"
+            class="notification is-success is-light mt-4"
+            hidden
+          >
+            <strong>Done!</strong> <span id="result-text"></span>
+            <span class="is-size-7"
+              >Press <kbd>Enter</kbd> for a new text.</span
             >
-              <span class="icon"><i class="fas fa-copy"></i></span>
-              <span>Copy</span>
-            </button>
-            <button
-              class="button is-small is-danger is-light"
-              id="btn-clear"
-              title="Clear text"
-            >
-              <span class="icon"><i class="fas fa-trash-alt"></i></span>
-              <span>Clear</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Textarea -->
-        <textarea
-          autocomplete="off"
-          id="textfield"
-          class="textarea textarea-custom"
-          style="height: 40vh"
-          placeholder="Start typing here using your chosen input method..."
-        ></textarea>
-
-        <!-- Editor Footer Stats -->
-        <div
-          class="px-3 py-2 is-flex is-justify-content-space-between stats-bar"
-        >
-          <div>
-            <span id="word-count">0 words</span> |
-            <span id="char-count">0 characters</span>
-          </div>
-          <div>
-            <span class="tag is-light is-small" id="status-tag">Ready</span>
           </div>
         </div>
       </div>
 
-      <!-- Information & Help Section -->
       <div class="columns">
-        <!-- Shortcuts Column -->
-        <div class="column is-7">
+        <!-- How it works -->
+        <div class="column">
+          <div class="card">
+            <header class="card-header">
+              <p class="card-header-title">
+                <span class="icon mr-2"
+                  ><i class="fas fa-question-circle"></i
+                ></span>
+                How it works
+              </p>
+            </header>
+            <div class="card-content content is-size-7">
+              <ol class="mt-0">
+                <li>Choose your language and an exercise.</li>
+                <li>
+                  With <strong>Afrim keyboard</strong> on, type Latin letters:
+                  they turn into your writing system. The hint under the text
+                  shows what to type next.
+                </li>
+                <li>
+                  Already have a keyboard for your language? Turn Afrim off and
+                  use yours.
+                </li>
+                <li>
+                  Green is right, red is wrong. Use <kbd>Backspace</kbd> to fix
+                  mistakes.
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shortcuts -->
+        <div class="column" id="shortcuts">
           <div class="card">
             <header class="card-header">
               <p class="card-header-title">
                 <span class="icon mr-2"><i class="fas fa-keyboard"></i></span>
-                Keyboard Shortcuts
+                Afrim shortcuts
               </p>
             </header>
             <div class="card-content p-0">
-              <table class="table is-fullwidth is-striped is-hoverable mb-0">
-                <thead>
-                  <tr>
-                    <th>Command</th>
-                    <th>Shortcut</th>
-                  </tr>
-                </thead>
+              <table class="table is-fullwidth is-striped mb-0 is-size-7">
                 <tbody>
                   <tr>
                     <td>Pause / Resume</td>
                     <td><kbd>Ctrl Left</kbd> + <kbd>Ctrl Right</kbd></td>
                   </tr>
                   <tr>
-                    <td>Clear Input</td>
+                    <td>Clear input</td>
                     <td><kbd>Escape</kbd> or <kbd>Space</kbd></td>
                   </tr>
                   <tr>
-                    <td>Select Next Predicate</td>
+                    <td>Next suggestion</td>
                     <td><kbd>Ctrl</kbd> + <kbd>Shift Left</kbd></td>
                   </tr>
                   <tr>
-                    <td>Select Previous Predicate</td>
+                    <td>Previous suggestion</td>
                     <td><kbd>Ctrl</kbd> + <kbd>Shift Right</kbd></td>
                   </tr>
                   <tr>
-                    <td>Commit Selected Predicate</td>
+                    <td>Use selected suggestion</td>
                     <td><kbd>Ctrl</kbd> + <kbd>Space</kbd></td>
                   </tr>
                 </tbody>
@@ -238,31 +371,23 @@
           </div>
         </div>
 
-        <!-- Custom Dataset Info Column -->
-        <div class="column is-5">
+        <!-- Custom dataset -->
+        <div class="column">
           <div class="card">
             <header class="card-header">
               <p class="card-header-title">
                 <span class="icon mr-2"><i class="fas fa-cogs"></i></span>
-                Custom Dataset
+                Your own dataset
               </p>
             </header>
-            <div class="card-content">
-              <p class="is-size-7 mb-3">
-                Load a custom TOML configuration by appending the
-                <code>configUrl</code> parameter to your URL:
+            <div class="card-content is-size-7">
+              <p class="mb-2">
+                Load any Afrim TOML configuration with the
+                <code>configUrl</code> parameter:
               </p>
-              <div class="field">
-                <div class="control">
-                  <textarea
-                    class="textarea is-small"
-                    readonly
-                    rows="3"
-                    style="font-family: monospace; font-size: 0.75rem"
-                  >
-?configUrl=https://raw.githubusercontent.com/fodydev/afrim-data/7584bc34cce93f8c52533065899d49acb42bd6d0/am/am.toml</textarea>
-                </div>
-              </div>
+              <code class="is-block" style="word-break: break-all"
+                >?configUrl=https://raw.githubusercontent.com/fodydev/afrim-data/7584bc34cce93f8c52533065899d49acb42bd6d0/am/am.toml</code
+              >
             </div>
           </div>
         </div>
@@ -313,194 +438,8 @@
       </div>
     </footer>
 
-    <!-- Tooltip Element -->
-    <div id="tooltip" class="dropdown" style="z-index: 999; position: absolute">
-      <div class="dropdown-menu">
-        <div class="dropdown-content">
-          <a class="dropdown-item" id="tooltip-input"> Cursor </a>
-          <hr class="dropdown-divider" />
-          <div id="tooltip-predicates"></div>
-        </div>
-      </div>
-    </div>
-
     <!-- Scripts -->
     <script type="text/javascript" src="./afrim_input.js"></script>
     <script type="text/javascript" src="./index.js"></script>
-    <script type="text/javascript">
-      document.addEventListener("DOMContentLoaded", () => {
-        // --- Navbar Burger Toggle ---
-        const $navbarBurgers = Array.prototype.slice.call(
-          document.querySelectorAll(".navbar-burger"),
-          0,
-        );
-        $navbarBurgers.forEach((el) => {
-          el.addEventListener("pointerup", () => {
-            const target = el.dataset.target;
-            const $target = document.getElementById(target);
-            el.classList.toggle("is-active");
-            $target.classList.toggle("is-active");
-          });
-        });
-
-        // --- Data & Language Setup ---
-        const langData = {
-          am: "Amharic",
-          bax: "Bamun",
-          byv: "Medumba",
-          clafrica: "Clafrica",
-          ethiopic: "Ethiopic",
-          ewo: "Ewondo",
-          fmp: "Nufi",
-          gez: "Geez",
-          geezime: "Geez (GeezIME)",
-          telex: "Vietnam (telex)",
-          vie: "Vietnam (telex & vni)",
-          vni: "Vietnam (vni only)",
-        };
-
-        // Determine current selected language
-        let selectedLang;
-        const urlLang = new URL(window.location).searchParams.get("lang");
-        if (urlLang) {
-          selectedLang = urlLang;
-        } else if (sessionStorage.getItem("lang")) {
-          selectedLang = sessionStorage.getItem("lang");
-        } else {
-          selectedLang = "gez";
-        }
-        sessionStorage.setItem("lang", selectedLang);
-
-        // Determine Config URL
-        let configUrl;
-        const urlConfig = new URL(window.location).searchParams.get(
-          "configUrl",
-        );
-        if (urlConfig) {
-          configUrl = urlConfig;
-          selectedLang = null;
-        } else {
-          configUrl = `https://raw.githubusercontent.com/fodydev/afrim-data/68910ab450d652f17068ab3b5b006295b5d4bda4/${selectedLang}/${selectedLang}.toml`;
-        }
-
-        // --- Populate Language Selector ---
-        const langSelect = document.getElementById("lang-select");
-        Object.entries(langData).forEach(([code, name]) => {
-          const option = document.createElement("option");
-          option.value = code;
-          option.textContent = name;
-          if (code === selectedLang) option.selected = true;
-          langSelect.appendChild(option);
-        });
-
-        langSelect.addEventListener("change", (e) => {
-          let loc = new URL(window.location);
-          loc.searchParams.set("lang", e.target.value);
-          window.location = loc.href;
-        });
-
-        // --- Feature Toggles (Translation & Translator) ---
-        const toggleTranslation = document.getElementById("toggle-translation");
-        const toggleTranslator = document.getElementById("toggle-translator");
-
-        // Determine the dataset loading preferences.
-        const urlTranslation = new URL(window.location).searchParams.get(
-          "dict",
-        );
-        if (urlTranslation !== null) {
-          toggleTranslation.checked =
-            urlTranslation.match(/^(on|yes|1|true)$/) != null;
-        } else {
-          toggleTranslation.checked =
-            localStorage.getItem("afrim_translation") !== "false";
-        }
-        const urlTranslator = new URL(window.location).searchParams.get(
-          "pdict",
-        );
-        if (urlTranslator !== null) {
-          toggleTranslator.checked =
-            urlTranslator.match(/^(on|yes|1|true)$/) != null;
-        } else {
-          toggleTranslator.checked =
-            localStorage.getItem("afrim_translator") !== "false";
-        }
-
-        let engineInstance = null;
-
-        function initializeAfrim() {
-          if (engineInstance) engineInstance.kill();
-
-          const ignoreTranslation = !toggleTranslation.checked;
-          const ignoreTranslators = !toggleTranslator.checked;
-
-          // Save preference states
-          localStorage.setItem("afrim_translation", toggleTranslation.checked);
-          localStorage.setItem("afrim_translator", toggleTranslator.checked);
-
-          engineInstance = new AfrimInput({
-            textFieldElementID: "textfield",
-            downloadStatusElementID: "download-status",
-            tooltipElementID: "tooltip",
-            tooltipInputElementID: "tooltip-input",
-            tooltipPredicatesElementID: "tooltip-predicates",
-            configUrl: configUrl,
-            tooltipAdjustLeft: 20,
-            tooltipAdjustTop: 75,
-            ignoreTranslation: ignoreTranslation,
-            ignoreTranslators: ignoreTranslators,
-          });
-        }
-
-        // Re-initialize engine when toggles change
-        toggleTranslation.addEventListener("change", (e) => {
-          let loc = new URL(window.location);
-          loc.searchParams.set("dict", e.target.checked);
-          window.location = loc.href;
-        });
-        toggleTranslator.addEventListener("change", (e) => {
-          let loc = new URL(window.location);
-          loc.searchParams.set("pdict", e.target.checked);
-          window.location = loc.href;
-        });
-
-        // Initial Engine Start
-        initializeAfrim();
-
-        // --- Editor Actions & Text Counters ---
-        const textarea = document.getElementById("textfield");
-        const charCount = document.getElementById("char-count");
-        const wordCount = document.getElementById("word-count");
-        const btnClear = document.getElementById("btn-clear");
-        const btnCopy = document.getElementById("btn-copy");
-
-        function updateCounters() {
-          const text = textarea.value;
-          charCount.textContent = `${text.length} character${text.length === 1 ? "" : "s"}`;
-          const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-          wordCount.textContent = `${words} word${words === 1 ? "" : "s"}`;
-        }
-
-        textarea.addEventListener("input", updateCounters);
-
-        btnClear.addEventListener("pointerup", () => {
-          textarea.value = "";
-          updateCounters();
-          textarea.focus();
-        });
-
-        btnCopy.addEventListener("pointerup", () => {
-          if (!textarea.value) return;
-          navigator.clipboard.writeText(textarea.value).then(() => {
-            const originalHTML = btnCopy.innerHTML;
-            btnCopy.innerHTML = `<span class="icon"><i class="fas fa-check"></i></span><span>Copied!</span>`;
-            btnCopy.classList.add("is-success");
-            setTimeout(() => {
-              btnCopy.innerHTML = originalHTML;
-              btnCopy.classList.remove("is-success");
-            }, 2000);
-          });
-        });
-      });
-    </script>
   </body>
 </html>
