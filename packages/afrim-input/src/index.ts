@@ -15,6 +15,8 @@ type Option = {
   configUrl: string;
   ignoreTranslation: boolean;
   ignoreTranslators: boolean;
+  // An already loaded configuration, used instead of downloading configUrl.
+  config?: AfrimConfig;
 };
 
 type Predicate = {
@@ -27,6 +29,9 @@ type Predicate = {
 
 // Afrim Input library.
 export default class AfrimInput {
+  // Resolves when Afrim is attached to the text field, rejects if it fails.
+  readonly ready: Promise<void>;
+
   // For bindings.
   private textFieldElement: HTMLInputElement;
   private downloadStatusElement: HTMLElement;
@@ -131,26 +136,27 @@ export default class AfrimInput {
     this.textFieldElement.disabled = true;
     this.downloadStatusElement.hidden = false;
 
-    this.loadConfigFromUrl(options.configUrl).then(
-      async (config: AfrimConfig) => {
+    const config = options.config
+      ? Promise.resolve(options.config)
+      : this.loadConfigFromUrl(options.configUrl);
+
+    this.ready = config
+      .then(async (config: AfrimConfig) => {
         await this.initAfrim(config);
         this.listenKeyboard();
         this.listenMouse();
         this.listenTextFieldState();
-
+      })
+      .catch((err) => {
+        // We release the text field for another instance.
+        delete this.textFieldElement.dataset.lock;
+        throw err;
+      })
+      .finally(() => {
         // We mark the text field available.
         this.textFieldElement.disabled = false;
         this.downloadStatusElement.hidden = true;
-      },
-      (err) => {
-        console.error(`Error downloading configuration file: ${err}`);
-
-        // We release the textfield
-        this.textFieldElement.disabled = false;
-        this.downloadStatusElement.hidden = true;
-        this.textFieldElement.dataset.lock = "false";
-      },
-    );
+      });
   }
 
   // Clear the predicates.

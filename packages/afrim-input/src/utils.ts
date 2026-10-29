@@ -14,7 +14,7 @@ export async function tomlToJson(data: string) {
 export async function httpGet(url: string, downloadStatusElement: HTMLElement) {
   const response = await ky(url, {
     onDownloadProgress: (progress, chunk) => {
-      downloadStatusElement.textContent = `${url} | ${progress.percent * 100}% - ${progress.transferredBytes} of ${progress.totalBytes} bytes`;
+      downloadStatusElement.textContent = `${url} | ${Math.round(progress.percent * 100)}% - ${progress.transferredBytes} of ${progress.totalBytes} bytes`;
     },
   });
 

@@ -33,6 +33,31 @@ new AfrimInput({
 });
 ```
 
+### Waiting for Afrim
+
+The `ready` promise resolves once Afrim is attached to the text field, and rejects if the dataset or the engine fails to load. The text field is released in both cases.
+
+```js
+const afrimInput = new AfrimInput({ ... });
+
+try {
+  await afrimInput.ready;
+} catch (err) {
+  console.error("Afrim couldn't start:", err);
+}
+```
+
+### Reusing a loaded dataset
+
+If you already loaded the dataset, pass it with the `config` option to skip the download:
+
+```js
+const config = new AfrimConfig();
+await config.loadFromUrl(configUrl, downloadStatusElement, false, false);
+
+new AfrimInput({ ..., config });
+```
+
 ## License
 
 Licensed under MIT license ([LICENSE](LICENSE) or http://opensource.org/licenses/MIT).
