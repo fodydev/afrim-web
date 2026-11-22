@@ -1,9 +1,10 @@
-"use strict";
-
 import type { Preprocessor, Translator } from "afrim";
+import getCaretCoordinates from "textarea-caret";
 import { AfrimConfig } from "./config";
+import { loadAfrim } from "./utils";
 
-type Option = {
+// Element bindings and behavior; all of them have a default value.
+type BaseOptions = {
   textFieldElementID: string;
   downloadStatusElementID: string;
   tooltipElementID: string;
@@ -12,139 +13,135 @@ type Option = {
   tooltipPredicateClass: string;
   tooltipAdjustLeft: number;
   tooltipAdjustTop: number;
-  configUrl: string;
   ignoreTranslation: boolean;
   ignoreTranslators: boolean;
-  // An already loaded configuration, used instead of downloading configUrl.
-  config?: AfrimConfig;
+};
+
+// Where the configuration comes from: an URL to download, or an already
+// loaded configuration (which takes precedence).
+type DataSource =
+  | { configUrl: string; config?: AfrimConfig }
+  | { configUrl?: string; config: AfrimConfig };
+
+/** Options of an {@link AfrimInput}: a data source and optional bindings. */
+export type AfrimInputOptions = Partial<BaseOptions> & DataSource;
+
+const DEFAULT_OPTIONS: BaseOptions = {
+  textFieldElementID: "textfield",
+  downloadStatusElementID: "download-status",
+  tooltipElementID: "tooltip",
+  tooltipInputElementID: "tooltip-input",
+  tooltipPredicatesElementID: "tooltip-predicates",
+  tooltipPredicateClass: "dropdown-item",
+  tooltipAdjustLeft: 0,
+  tooltipAdjustTop: 0,
+  ignoreTranslation: false,
+  ignoreTranslators: false,
+};
+
+// Number of predicates shown after the selected one.
+const PAGE_SIZE = 5;
+
+// A command emitted by the afrim preprocessor (`Preprocessor.popQueue`).
+type AfrimCommand =
+  | "NOP"
+  | "Pause"
+  | "Resume"
+  | { Delete: { length?: number } }
+  | { CommitText: string };
+
+// A predicate as returned by the afrim translator (`Translator.translate`).
+type RawPredicate = {
+  code: string;
+  remaining_code: string;
+  texts: string[];
+  can_commit: boolean;
 };
 
 type Predicate = {
   id: number;
   code: string;
   remainingCode: string;
-  texts: string[];
+  text: string;
   canCommit: boolean;
 };
 
-// Afrim Input library.
+function getElementOrThrow<T extends HTMLElement>(id: string): T {
+  const element = document.getElementById(id);
+
+  if (!element) throw new Error(`element with id ${id} not found`);
+  return element as T;
+}
+
+/** Attaches the Afrim input method to a text field. */
 export default class AfrimInput {
-  // Resolves when Afrim is attached to the text field, rejects if it fails.
+  /** Resolves when Afrim is attached to the text field, rejects if it fails. */
   readonly ready: Promise<void>;
 
-  // For bindings.
-  private textFieldElement: HTMLInputElement;
-  private downloadStatusElement: HTMLElement;
-  private tooltipElement: HTMLElement;
-  private tooltipInputElement: HTMLElement;
-  private tooltipPredicatesElement: HTMLElement;
+  private readonly options: BaseOptions;
 
-  // Afrim library.
+  // Bindings.
+  private readonly textFieldElement: HTMLInputElement;
+  private readonly downloadStatusElement: HTMLElement;
+  private readonly tooltipElement: HTMLElement;
+  private readonly tooltipInputElement: HTMLElement;
+  private readonly tooltipPredicatesElement: HTMLElement;
+
+  // Afrim engine, available once `ready` resolves.
   private preprocessor?: Preprocessor;
   private translator?: Translator;
 
-  // Data
-  private data: {
-    predicates: Predicate[];
-    predicateId: number;
-    pageSize: number;
-    isIdle: boolean;
-    isBackspacePressed: boolean;
-    cursorPos: number;
-    options: Option;
+  private state = {
+    predicates: [] as Predicate[],
+    selectedPredicate: 0,
+    isIdle: false,
+    isBackspacePressed: false,
+    cursorPos: 0,
   };
 
-  // Initialize the Afrim Input instance.
-  constructor(options: Option) {
-    let defaultOptions: Option = {
-      textFieldElementID: "textfield",
-      downloadStatusElementID: "download-status",
-      tooltipElementID: "tooltip",
-      tooltipInputElementID: "tooltip-input",
-      tooltipPredicatesElementID: "tooltip-predicates",
-      tooltipPredicateClass: "dropdown-item",
-      tooltipAdjustLeft: 0,
-      tooltipAdjustTop: 0,
-      configUrl:
-        "https://raw.githubusercontent.com/fodydev/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/gez/gez.toml",
-      ignoreTranslation: false,
-      ignoreTranslators: false,
-    };
+  /**
+   * Binds Afrim to the text field and loads its configuration.
+   * Wait for {@link AfrimInput.ready} before using the text field.
+   */
+  constructor(options: AfrimInputOptions) {
+    const { config, configUrl, ...bindings } = options;
+    this.options = { ...DEFAULT_OPTIONS, ...bindings };
 
-    // merge the options passed in with our default options
-    // properties that exist in the incoming options object will overwrite that in the defaultOptions
-    options = { ...defaultOptions, ...options };
-
-    // Binding
-    var _ = document.getElementById(options.textFieldElementID);
-    if (_) {
-      this.textFieldElement = _ as HTMLInputElement;
-    } else {
-      throw new Error(
-        `element with id ${options.textFieldElementID} not found`,
-      );
+    if (!config && !configUrl) {
+      throw new Error("AfrimInput needs either a `configUrl` or a `config`.");
     }
 
-    var _ = document.getElementById(options.downloadStatusElementID);
-    if (_) {
-      this.downloadStatusElement = _ as HTMLElement;
-    } else {
-      throw new Error(`element with id ${options.downloadStatusElementID}`);
-    }
-
-    var _ = document.getElementById(options.tooltipElementID);
-    if (_) {
-      this.tooltipElement = _ as HTMLElement;
-    } else {
-      throw new Error(`element with id ${options.tooltipElementID}`);
-    }
-
-    var _ = document.getElementById(options.tooltipInputElementID);
-    if (_) {
-      this.tooltipInputElement = _ as HTMLElement;
-    } else {
-      throw new Error(`element with id ${options.tooltipInputElementID}`);
-    }
-
-    var _ = document.getElementById(options.tooltipPredicatesElementID);
-    if (_) {
-      this.tooltipPredicatesElement = _ as HTMLElement;
-    } else {
-      throw new Error(`element with id ${options.tooltipPredicatesElementID}`);
-    }
-
-    // Save options
-    this.data = {
-      predicates: Array(),
-      predicateId: 0,
-      pageSize: 5,
-      isIdle: false,
-      isBackspacePressed: false,
-      cursorPos: 0,
-      options: options,
-    };
+    this.textFieldElement = getElementOrThrow(this.options.textFieldElementID);
+    this.downloadStatusElement = getElementOrThrow(
+      this.options.downloadStatusElementID,
+    );
+    this.tooltipElement = getElementOrThrow(this.options.tooltipElementID);
+    this.tooltipInputElement = getElementOrThrow(
+      this.options.tooltipInputElementID,
+    );
+    this.tooltipPredicatesElement = getElementOrThrow(
+      this.options.tooltipPredicatesElementID,
+    );
 
     // Prevent another afrim instance.
     if (this.textFieldElement.dataset.lock) {
       throw new Error("An afrim instance is already linked to this element.");
     }
-
     this.textFieldElement.dataset.lock = "true";
 
-    // We wait that the afrim ime engine is ready.
-    // We mark the text field busy.
+    // The text field is busy until the afrim engine is ready.
     this.textFieldElement.disabled = true;
     this.downloadStatusElement.hidden = false;
 
-    const config = options.config
-      ? Promise.resolve(options.config)
-      : this.loadConfigFromUrl(options.configUrl);
+    const loadedConfig = config
+      ? Promise.resolve(config)
+      : this.loadConfigFromUrl(configUrl!);
 
-    this.ready = config
-      .then(async (config: AfrimConfig) => {
+    this.ready = loadedConfig
+      .then(async (config) => {
         await this.initAfrim(config);
         this.listenKeyboard();
-        this.listenMouse();
+        this.listenCaret();
         this.listenTextFieldState();
       })
       .catch((err) => {
@@ -153,268 +150,252 @@ export default class AfrimInput {
         throw err;
       })
       .finally(() => {
-        // We mark the text field available.
         this.textFieldElement.disabled = false;
         this.downloadStatusElement.hidden = true;
       });
   }
 
-  // Clear the predicates.
-  private clearPredicate() {
-    this.tooltipPredicatesElement.innerHTML = "";
+  /** Detaches Afrim from the text field and frees the engine. */
+  kill(): void {
+    delete this.textFieldElement.dataset.lock;
+    this.textFieldElement.replaceWith(this.textFieldElement.cloneNode(true));
 
-    this.data.predicateId = 0;
-    this.data.predicates = Array();
+    this.translator?.free();
+    this.preprocessor?.free();
   }
 
-  // Load predicates in the memory
-  private loadPredicates(predicates: any) {
-    this.clearPredicate();
-    var predicateId = 0;
+  private async loadConfigFromUrl(configUrl: string): Promise<AfrimConfig> {
+    const config = new AfrimConfig();
+    await config.loadFromUrl(
+      configUrl,
+      this.downloadStatusElement,
+      this.options.ignoreTranslation,
+      this.options.ignoreTranslators,
+    );
+    return config;
+  }
 
-    for (const predicate of predicates) {
+  private async initAfrim(config: AfrimConfig): Promise<void> {
+    const afrim = await loadAfrim();
+
+    this.preprocessor = new afrim.Preprocessor(config.data, 64);
+    this.translator = new afrim.Translator(config.translation, false, 0.7);
+
+    for (const [name, script] of Object.entries(config.translators)) {
+      this.translator.register(name, script);
+    }
+  }
+
+  // --- Predicates ---
+
+  private clearPredicates(): void {
+    this.tooltipPredicatesElement.replaceChildren();
+    this.state.selectedPredicate = 0;
+    this.state.predicates = [];
+  }
+
+  // Flattens the translator output: one predicate per text.
+  private loadPredicates(rawPredicates: RawPredicate[]): void {
+    this.clearPredicates();
+
+    let id = 0;
+    for (const predicate of rawPredicates) {
       for (const text of predicate.texts) {
-        this.data.predicates.push({
-          id: ++predicateId,
+        this.state.predicates.push({
+          id: ++id,
           code: predicate.code,
           remainingCode: predicate.remaining_code,
-          texts: [text],
+          text,
           canCommit: predicate.can_commit,
         });
       }
     }
   }
 
-  // Update the predicates.
-  private updatePredicate() {
-    this.tooltipPredicatesElement.innerHTML = "";
+  // Moves the selection by `offset`, wrapping around.
+  private selectPredicate(offset: number): void {
+    const count = this.state.predicates.length;
+    if (!count) return;
 
-    // We get the current the page
-    const predicates = this.data.predicates
-      .slice(this.data.predicateId, this.data.predicates.length)
-      .concat(this.data.predicates.slice(0, this.data.predicateId));
-
-    let forloopCounter = 0;
-    for (const predicate of predicates) {
-      // Mark the selected predicate.
-      const icon = forloopCounter == 0 ? "✏️" : "";
-
-      if (forloopCounter++ > this.data.pageSize) break;
-
-      // Config the tooltip predicate element.
-      const predicateElement = document.createElement("a");
-      predicateElement.classList.add(this.data.options.tooltipPredicateClass);
-      predicateElement.innerText = `${icon} ${predicate.id}. ${predicate.texts[0]} ~${predicate.remainingCode}`;
-      for (let event of ["pointerdown", "click"]) {
-        predicateElement.addEventListener(
-          event,
-          () => {
-            this.preprocessor?.commit(predicate.texts[0]);
-            this.processCommand();
-            this.preprocessor?.process("", "keydown");
-            this.clearPredicate();
-          },
-          false,
-        );
-      }
-      this.tooltipPredicatesElement.append(predicateElement);
-    }
+    this.state.selectedPredicate =
+      (((this.state.selectedPredicate + offset) % count) + count) % count;
+    this.renderPredicates();
   }
 
-  // Restore cursor position.
-  private restoreCursorPosition() {
+  private commitPredicate(text: string): void {
+    this.preprocessor?.commit(text);
+    this.clearPredicates();
+  }
+
+  // Shows the selected predicate and the next ones, wrapping around,
+  // without copying the whole predicate list.
+  private renderPredicates(): void {
+    const { predicates, selectedPredicate } = this.state;
+    const count = Math.min(predicates.length, PAGE_SIZE + 1);
+    const elements: HTMLElement[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const predicate = predicates[(selectedPredicate + i) % predicates.length];
+      const marker = i === 0 ? "✏️" : "";
+      const element = document.createElement("a");
+
+      element.classList.add(this.options.tooltipPredicateClass);
+      element.innerText = `${marker} ${predicate.id}. ${predicate.text} ~${predicate.remainingCode}`;
+      for (const eventName of ["pointerdown", "click"]) {
+        element.addEventListener(eventName, () => {
+          this.preprocessor?.commit(predicate.text);
+          this.processCommands();
+          this.preprocessor?.process("", "keydown");
+          this.clearPredicates();
+        });
+      }
+      elements.push(element);
+    }
+    this.tooltipPredicatesElement.replaceChildren(...elements);
+  }
+
+  // --- Text field edition ---
+
+  private restoreCursorPosition(): void {
     this.textFieldElement.focus();
     this.textFieldElement.setSelectionRange(
-      this.data.cursorPos,
-      this.data.cursorPos,
+      this.state.cursorPos,
+      this.state.cursorPos,
     );
   }
 
-  // We execute preprocessor commands.
-  private processCommand(): any {
-    let cmd;
+  private deleteBeforeCursor(count: number): void {
+    const { value } = this.textFieldElement;
+    const cursorPos = this.state.cursorPos;
 
-    while ((cmd = this.preprocessor?.popQueue()) !== "NOP") {
-      const textValue = this.textFieldElement.value;
+    this.textFieldElement.value =
+      value.substring(0, cursorPos - count) + value.substring(cursorPos);
+    this.state.cursorPos -= count;
+    this.restoreCursorPosition();
+  }
 
-      this.data.cursorPos = this.data.cursorPos < 0 ? 0 : this.data.cursorPos;
+  private insertAtCursor(text: string): void {
+    const { value } = this.textFieldElement;
+    const cursorPos = this.state.cursorPos;
 
-      if (!cmd) {
-        return false;
+    this.textFieldElement.value =
+      value.substring(0, cursorPos) + text + value.substring(cursorPos);
+    this.state.cursorPos += text.length;
+    this.restoreCursorPosition();
+  }
+
+  // Executes the pending preprocessor commands.
+  private processCommands(): void {
+    if (!this.preprocessor) return;
+
+    let command: AfrimCommand;
+    while ((command = this.preprocessor.popQueue()) !== "NOP") {
+      this.state.cursorPos = Math.max(0, this.state.cursorPos);
+
+      if (command === "Pause") {
+        this.state.isIdle = true;
+      } else if (command === "Resume") {
+        this.state.isIdle = false;
+      } else if (typeof command === "object" && "Delete" in command) {
+        // The browser already deleted one character on backspace.
+        const count =
+          (command.Delete.length ?? 1) -
+          (this.state.isBackspacePressed ? 1 : 0);
+        this.state.isBackspacePressed = false;
+        this.deleteBeforeCursor(count);
+      } else if (typeof command === "object" && "CommitText" in command) {
+        this.insertAtCursor(command.CommitText);
+      } else if (process.env.NODE_ENV !== "production") {
+        console.error(`afrim command "${command}" unsupported.`);
       }
+    }
+  }
 
-      if (cmd.Delete != undefined) {
-        let step = cmd.Delete.length ?? 1;
-        step -= this.data.isBackspacePressed ? 1 : 0;
-        this.data.isBackspacePressed = false;
-        this.textFieldElement.value =
-          textValue.substring(0, this.data.cursorPos - step) +
-          textValue.substring(this.data.cursorPos, textValue.length);
-        this.data.cursorPos -= step;
-        this.restoreCursorPosition();
-      } else if (cmd == "Pause") {
-        this.data.isIdle = true;
-      } else if (cmd == "Resume") {
-        this.data.isIdle = false;
-      } else if (cmd.CommitText) {
-        this.textFieldElement.value =
-          textValue.substring(0, this.data.cursorPos) +
-          cmd.CommitText +
-          textValue.substring(this.data.cursorPos, textValue.length);
-        this.data.cursorPos += cmd.CommitText.length;
-        this.restoreCursorPosition();
-      } else {
-        if (process.env.NODE_ENV !== "production") {
-          console.error(`afrim command "${cmd}" unsupported.`);
-        }
+  // --- Event listeners ---
+
+  // Handles the Ctrl shortcuts.
+  private handleShortcut(event: KeyboardEvent): void {
+    if (!event.ctrlKey) return;
+
+    switch (event.code) {
+      case "ShiftLeft":
+        this.selectPredicate(-1);
+        break;
+      case "ShiftRight":
+        this.selectPredicate(1);
+        break;
+      case "Space": {
+        const predicate = this.state.predicates[this.state.selectedPredicate];
+        if (predicate) this.commitPredicate(predicate.text);
+        else this.clearPredicates();
+        break;
       }
+      case "ControlLeft":
+      case "ControlRight":
+        this.state.isIdle = !this.state.isIdle;
+        break;
     }
   }
 
-  private async loadConfigFromUrl(configUrl: string) {
-    // We download the datalang.
-    let afrimConfig = new AfrimConfig();
-    await afrimConfig.loadFromUrl(
-      configUrl,
-      this.downloadStatusElement,
-      this.data.options.ignoreTranslation,
-      this.data.options.ignoreTranslators,
-    );
+  private handleKeyUp(event: KeyboardEvent): void {
+    this.state.cursorPos = this.textFieldElement.selectionEnd ?? 0;
+    this.handleShortcut(event);
 
-    return afrimConfig;
-  }
+    if (event.key === "GroupPrevious" || event.key === "GroupNext") return;
+    if (this.state.isIdle || !this.preprocessor) return;
 
-  // We config the afrim ime.
-  private async initAfrim(config: AfrimConfig) {
-    const afrim = await import("afrim");
-
-    this.preprocessor = new afrim.Preprocessor(config.data, 64);
-    this.translator = new afrim.Translator(config.translation, false, 0.7);
-
-    for (let e of Object.entries(config.translators)) {
-      this.translator?.register(e[0], e[1]);
-    }
-  }
-
-  private listenKeyboard() {
-    // We listen keyboard events.
-    this.textFieldElement.addEventListener(
-      "keyup",
-      (event) => {
-        this.data.cursorPos = this.textFieldElement.selectionEnd ?? 0;
-
-        // We manage special keys.
-        if (event.ctrlKey) {
-          // Previous predicate.
-          if (event.code == "ShiftLeft") {
-            this.data.predicateId =
-              this.data.predicateId < 1
-                ? this.data.predicates.length - 1
-                : this.data.predicateId - 1;
-            this.updatePredicate();
-          }
-          // Next predicate.
-          else if (event.code == "ShiftRight") {
-            this.data.predicateId =
-              this.data.predicateId >= this.data.predicates.length - 1
-                ? 0
-                : this.data.predicateId + 1;
-            this.updatePredicate();
-          }
-          // Commit the predicate.
-          else if (event.code == "Space") {
-            var predicate = this.data.predicates[this.data.predicateId];
-
-            if (predicate) this.preprocessor?.commit(predicate.texts[0]);
-            this.clearPredicate();
-          } else if (
-            event.code == "ControlLeft" ||
-            event.code == "ControlRight"
-          ) {
-            this.data.isIdle = !this.data.isIdle;
-          }
-        }
-
-        if (event.key == "GroupPrevious" || event.key == "GroupNext") return;
-        if (this.data.isIdle) return;
-
-        if (event.key == "Backspace") {
-          this.data.isBackspacePressed = true;
-        }
-
-        const changed = this.preprocessor?.process(event.key, "keydown");
-        const input = this.preprocessor?.getInput() || "";
-
-        // Process pending commands.
-        this.processCommand();
-
-        // We update the predicates if input changed.
-        if (!changed) return;
-
-        this.tooltipInputElement.innerText = "📝 " + input;
-
-        const predicates = this.translator?.translate(input);
-        this.loadPredicates(predicates);
-        this.updatePredicate();
-      },
-      false,
-    );
-  }
-
-  private listenMouse() {
-    // Make the tooltip follow the mouse.
-    this.textFieldElement.addEventListener(
-      "keyup",
-      (event) => {
-        const getCaretCoordinates = require("textarea-caret");
-        const caret = getCaretCoordinates(
-          this.textFieldElement,
-          this.textFieldElement.selectionEnd,
-        );
-
-        this.tooltipElement.style.top =
-          this.data.options.tooltipAdjustTop +
-          this.textFieldElement.offsetTop -
-          this.textFieldElement.scrollTop +
-          caret.top +
-          "px";
-        this.tooltipElement.style.left =
-          this.data.options.tooltipAdjustLeft +
-          this.textFieldElement.offsetLeft -
-          this.textFieldElement.scrollLeft +
-          caret.left +
-          "px";
-      },
-      false,
-    );
-  }
-
-  private listenTextFieldState() {
-    // Make the tooltip active inside of the textfield.
-    for (let event of ["click", "touchstart"]) {
-      this.textFieldElement.addEventListener(
-        event,
-        () => {
-          this.tooltipElement.classList.add("is-active");
-          this.preprocessor?.process("", "keydown");
-          this.clearPredicate();
-        },
-        false,
-      );
+    if (event.key === "Backspace") {
+      this.state.isBackspacePressed = true;
     }
 
-    // Hide the tooltip if not typing
-    this.textFieldElement.addEventListener("blur", (e) => {
-      this.tooltipElement.classList.remove("is-active");
+    const changed = this.preprocessor.process(event.key, "keydown");
+    const input = this.preprocessor.getInput();
+
+    this.processCommands();
+
+    // We update the predicates if the input changed.
+    if (!changed) return;
+
+    this.tooltipInputElement.innerText = "📝 " + input;
+    const predicates: RawPredicate[] = this.translator?.translate(input) ?? [];
+    this.loadPredicates(predicates);
+    this.renderPredicates();
+  }
+
+  private listenKeyboard(): void {
+    this.textFieldElement.addEventListener("keyup", (event) =>
+      this.handleKeyUp(event),
+    );
+  }
+
+  // Makes the tooltip follow the caret.
+  private listenCaret(): void {
+    this.textFieldElement.addEventListener("keyup", () => {
+      // No need to compute the caret position (it forces a layout)
+      // while the tooltip is hidden.
+      if (!this.tooltipElement.classList.contains("is-active")) return;
+
+      const field = this.textFieldElement;
+      const caret = getCaretCoordinates(field, field.selectionEnd ?? 0);
+      const { style } = this.tooltipElement;
+
+      style.top = `${this.options.tooltipAdjustTop + field.offsetTop - field.scrollTop + caret.top}px`;
+      style.left = `${this.options.tooltipAdjustLeft + field.offsetLeft - field.scrollLeft + caret.left}px`;
     });
   }
 
-  // Interrupt the Afrim has detach it from the linked textfield.
-  kill() {
-    delete this.textFieldElement.dataset.lock;
-    this.textFieldElement.replaceWith(this.textFieldElement.cloneNode(true));
+  // Shows the tooltip while the text field is in use.
+  private listenTextFieldState(): void {
+    for (const eventName of ["click", "touchstart"]) {
+      this.textFieldElement.addEventListener(eventName, () => {
+        this.tooltipElement.classList.add("is-active");
+        this.preprocessor?.process("", "keydown");
+        this.clearPredicates();
+      });
+    }
 
-    this.translator?.free();
-    this.preprocessor?.free();
+    this.textFieldElement.addEventListener("blur", () => {
+      this.tooltipElement.classList.remove("is-active");
+    });
   }
 }

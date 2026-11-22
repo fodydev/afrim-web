@@ -1,26 +1,18 @@
-"use strict";
+// Typing trainer for the Afrim input method.
+// `AfrimInput`, `AfrimConfig` and `preloadAfrim` come from afrim_input.js.
 
-const DATA_URL =
-  "https://raw.githubusercontent.com/fodydev/afrim-data/68910ab450d652f17068ab3b5b006295b5d4bda4";
 const DRILL_WORDS = 12;
-
-// Supported languages: dataset folder in https://github.com/fodydev/afrim-data => name.
-const LANGUAGES = {
-  gez: "Ge'ez",
-  geezime: "Ge'ez (GeezIME)",
-  am: "Amharic",
-  ethiopic: "Ethiopic",
-  bax: "Bamum",
-  byv: "Medumba",
-  fmp: "Nufi",
-  ewo: "Ewondo",
-  clafrica: "Clafrica",
-  vie: "Vietnamese (telex & vni)",
-  telex: "Vietnamese (telex)",
-  vni: "Vietnamese (vni)",
-};
-
 const params = new URL(window.location).searchParams;
+
+// --- Data source ---
+// The datasets come from an afrim-data site (see its README "Web access"):
+// `?dataUrl=` overrides the one chosen at build time (AFRIM_DATA_URL).
+const dataUrl = new URL(
+  (params.get("dataUrl") || process.env.AFRIM_DATA_URL).replace(/\/?$/, "/"),
+  window.location,
+);
+// A custom configuration URL bypasses the dataset list.
+const customConfigUrl = params.get("configUrl");
 
 // --- Settings ---
 // A setting comes from the URL first, then from the saved preference.
@@ -31,65 +23,115 @@ function readFlag(param, storageKey, fallback = true) {
   return saved === null ? fallback : saved === "true";
 }
 
-// Reload the page with a new URL parameter (the dataset must be reloaded).
-function reloadWith(param, value) {
-  const loc = new URL(window.location);
-  loc.searchParams.set(param, value);
-  window.location = loc.href;
-}
-
-const configUrlParam = params.get("configUrl");
-const lang = params.get("lang") || sessionStorage.getItem("lang") || "gez";
-const configUrl = configUrlParam || `${DATA_URL}/${lang}/${lang}.toml`;
 const settings = {
   ime: readFlag("ime", "afrim_ime"),
   // The dictionary can be big, so it is only loaded on demand.
   dict: readFlag("dict", "afrim_dict", false),
   pdict: readFlag("pdict", "afrim_translator"),
 };
-sessionStorage.setItem("lang", lang);
 localStorage.setItem("afrim_ime", settings.ime);
 localStorage.setItem("afrim_dict", settings.dict);
 localStorage.setItem("afrim_translator", settings.pdict);
 
+// Reload the page with changed URL parameters (the dataset must be
+// reloaded). A `null` value removes the parameter.
+function reloadWith(changes) {
+  const url = new URL(window.location);
+  for (const [param, value] of Object.entries(changes)) {
+    if (value === null) url.searchParams.delete(param);
+    else url.searchParams.set(param, value);
+  }
+  window.location = url.href;
+}
+
 // --- Elements ---
-const textarea = document.getElementById("textfield");
-const targetBox = document.getElementById("target");
-const hintBox = document.getElementById("hint");
-const resultsBox = document.getElementById("results");
-const langSelect = document.getElementById("lang-select");
-const exerciseSelect = document.getElementById("exercise-select");
-const customPanel = document.getElementById("custom-panel");
-const customText = document.getElementById("custom-text");
+const byId = (id) => document.getElementById(id);
+const el = {
+  status: byId("download-status"),
+  textarea: byId("textfield"),
+  target: byId("target"),
+  hint: byId("hint"),
+  results: byId("results"),
+  resultText: byId("result-text"),
+  langSelect: byId("lang-select"),
+  exerciseSelect: byId("exercise-select"),
+  customPanel: byId("custom-panel"),
+  customText: byId("custom-text"),
+  progress: byId("progress"),
+  wpm: byId("stat-wpm"),
+  accuracy: byId("stat-accuracy"),
+  time: byId("stat-time"),
+};
+
+function showError(message) {
+  el.status.classList.replace("is-info", "is-danger");
+  el.status.textContent = message;
+  el.status.hidden = false;
+}
 
 // --- State ---
+let lang = null; // Directory of the selected dataset, null when custom.
 let charset = []; // Characters of the dataset, used for random drills.
-let hints = {}; // Character => shortest Afrim code producing it.
-let target = [];
-let startTime = null;
-let finished = false;
-let lastValue = null;
+const hints = {}; // Character => shortest Afrim code producing it.
+let updateScheduled = false;
 
-// --- Dataset ---
-async function loadDataset() {
-  const status = document.getElementById("download-status");
-  status.hidden = false;
+// The current round, reset by `newRound`.
+const round = {
+  target: [], // Characters to type.
+  spans: [], // One span per target character, built once per round.
+  renderedTyped: [], // Typed characters the spans currently reflect.
+  startTime: null,
+  finished: false,
+  lastValue: null, // Text field value of the last update.
+  counts: { typedLength: 0, correct: 0 }, // From the last update.
+};
+
+// --- Datasets ---
+// Datasets published by afrim-data: [{ name, description, dir, config }].
+async function fetchDatasets() {
+  const url = new URL("datasets.json", dataUrl);
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${url}: ${response.statusText}`);
+  return response.json();
+}
+
+// The dataset asked in the URL, else the last used one, else the first one.
+function chooseDataset(datasets) {
+  const wanted = params.get("lang") || sessionStorage.getItem("lang");
+  return datasets.find((dataset) => dataset.dir === wanted) ?? datasets[0];
+}
+
+function renderLanguageOptions(datasets) {
+  if (customConfigUrl) {
+    el.langSelect.add(new Option("Custom dataset", "", true, true));
+  }
+  for (const { name, description, dir } of datasets) {
+    const option = new Option(name, dir, false, dir === lang);
+    option.title = description;
+    el.langSelect.add(option);
+  }
+}
+
+// Load the configuration and index its characters for drills and hints.
+async function loadDataset(configUrl) {
+  el.status.hidden = false;
 
   const config = new AfrimConfig();
   try {
     await config.loadFromUrl(
       configUrl,
-      status,
+      el.status,
       !(settings.ime && settings.dict),
       !(settings.ime && settings.pdict),
     );
   } catch (err) {
     console.error(err);
-    status.classList.replace("is-info", "is-danger");
-    status.textContent = `Could not load the dataset (${configUrl}). You can still practice your own text with your own keyboard.`;
+    showError(
+      `Could not load the dataset (${configUrl}). You can still practice your own text with your own keyboard.`,
+    );
     return null;
   }
-  status.hidden = true;
+  el.status.hidden = true;
 
   for (const [code, value] of Object.entries(config.data)) {
     const char = value.normalize("NFC");
@@ -116,123 +158,181 @@ function randomDrill() {
 }
 
 function pickText() {
-  if (exerciseSelect.value === "custom") return customText.value.trim();
+  if (el.exerciseSelect.value === "custom") return el.customText.value.trim();
   return charset.length ? randomDrill() : "";
 }
 
 // --- Round ---
 function newRound(text = pickText()) {
-  customPanel.hidden = exerciseSelect.value !== "custom";
-  target = Array.from(text.replace(/\s+/g, " ").normalize("NFC"));
+  el.customPanel.hidden = el.exerciseSelect.value !== "custom";
 
-  startTime = null;
-  finished = false;
-  lastValue = null;
-  textarea.value = "";
-  textarea.readOnly = false;
-  resultsBox.hidden = true;
+  Object.assign(round, {
+    target: Array.from(text.replace(/\s+/g, " ").normalize("NFC")),
+    renderedTyped: [],
+    startTime: null,
+    finished: false,
+    lastValue: null,
+    counts: { typedLength: 0, correct: 0 },
+  });
+  buildTarget();
+
+  el.textarea.value = "";
+  el.textarea.readOnly = false;
+  el.results.hidden = true;
   // Reset the Afrim input buffer.
-  textarea.dispatchEvent(new Event("click"));
-  textarea.focus();
+  el.textarea.dispatchEvent(new Event("click"));
+  el.textarea.focus();
   update();
 }
 
-function stats() {
-  const typed = Array.from(textarea.value.normalize("NFC"));
-  const correct = typed.filter((c, i) => c === target[i]).length;
-  const seconds = startTime ? (Date.now() - startTime) / 1000 : 0;
-  const cpm = seconds ? (correct / seconds) * 60 : 0;
+function countCorrect(typed) {
+  let correct = 0;
+  for (let i = 0; i < typed.length; i++) {
+    if (typed[i] === round.target[i]) correct++;
+  }
+  return correct;
+}
+
+// Index of the first character not typed correctly.
+function firstMismatch(typed) {
+  let i = 0;
+  while (i < typed.length && typed[i] === round.target[i]) i++;
+  return i;
+}
+
+function computeStats({ typedLength, correct }) {
+  const seconds = round.startTime ? (Date.now() - round.startTime) / 1000 : 0;
+  const charsPerMinute = seconds ? (correct / seconds) * 60 : 0;
   return {
-    typed,
+    typedLength,
     seconds,
-    wpm: Math.round(cpm / 5),
-    accuracy: typed.length ? Math.round((correct / typed.length) * 100) : 100,
+    wpm: Math.round(charsPerMinute / 5),
+    accuracy: typedLength ? Math.round((correct / typedLength) * 100) : 100,
   };
 }
 
-function renderTarget(typed) {
-  targetBox.innerHTML = "";
-  if (!target.length) {
-    targetBox.textContent =
-      exerciseSelect.value === "custom"
-        ? "Paste or write your text above, then press “Use this text”."
-        : "No letters found in this dataset. Try “My own text”.";
-    return;
-  }
-
-  let next = typed.length;
-  target.forEach((c, i) => {
+// --- Rendering ---
+// Create the target spans once per round.
+function buildTarget() {
+  round.spans = round.target.map((c, i) => {
     const span = document.createElement("span");
     span.textContent = c;
-    if (i < typed.length) {
-      span.className = typed[i] === c ? "ok" : "bad";
-      if (typed[i] !== c && next === typed.length) next = i;
-    } else if (i === typed.length) {
-      span.className = "current";
-    }
-    targetBox.append(span);
+    if (i === 0) span.className = "current";
+    return span;
   });
+  el.target.replaceChildren(...round.spans);
 
-  // Hint for the first character not yet typed correctly.
-  const c = target[next];
-  if (c === undefined) {
-    hintBox.innerHTML = "&nbsp;";
-  } else if (c === " ") {
-    hintBox.innerHTML = "Next: <kbd>Space</kbd>";
-  } else if (settings.ime && hints[c]) {
-    hintBox.innerHTML = `Next: <span class="hint-char"></span> → type <kbd></kbd>`;
-    hintBox.querySelector(".hint-char").textContent = c;
-    hintBox.querySelector("kbd").textContent = hints[c];
+  if (!round.target.length) {
+    el.target.textContent =
+      el.exerciseSelect.value === "custom"
+        ? "Paste or write your text above, then press “Use this text”."
+        : "No letters found in this dataset. Try “My own text”.";
+  }
+}
+
+function spanClass(typed, i) {
+  if (i < typed.length) return typed[i] === round.target[i] ? "ok" : "bad";
+  return i === typed.length ? "current" : "";
+}
+
+function renderTarget(typed) {
+  if (!round.target.length) return;
+
+  // Only the spans from the first changed character up to the end of the
+  // longer text (old or new, including the cursor) can have changed.
+  const previous = round.renderedTyped;
+  const common = Math.min(typed.length, previous.length);
+  let from = 0;
+  while (from < common && typed[from] === previous[from]) from++;
+  const to = Math.min(
+    Math.max(typed.length, previous.length),
+    round.target.length - 1,
+  );
+  for (let i = from; i <= to; i++) {
+    round.spans[i].className = spanClass(typed, i);
+  }
+  round.renderedTyped = typed;
+
+  renderHint(round.target[firstMismatch(typed)]);
+}
+
+// Hint for the next character to type.
+function renderHint(char) {
+  if (char === undefined) {
+    el.hint.innerHTML = "&nbsp;";
+  } else if (char === " ") {
+    el.hint.innerHTML = "Next: <kbd>Space</kbd>";
+  } else if (settings.ime && hints[char]) {
+    el.hint.innerHTML = `Next: <span class="hint-char"></span> → type <kbd></kbd>`;
+    el.hint.querySelector(".hint-char").textContent = char;
+    el.hint.querySelector("kbd").textContent = hints[char];
   } else {
-    hintBox.innerHTML = `Next: <span class="hint-char"></span>`;
-    hintBox.querySelector(".hint-char").textContent = c;
+    el.hint.innerHTML = `Next: <span class="hint-char"></span>`;
+    el.hint.querySelector(".hint-char").textContent = char;
   }
 }
 
-function renderStats(s) {
-  document.getElementById("stat-wpm").textContent = s.wpm;
-  document.getElementById("stat-accuracy").textContent = `${s.accuracy}%`;
-  document.getElementById("stat-time").textContent =
-    `${Math.floor(s.seconds)}s`;
-  const progress = target.length
-    ? Math.round(
-        (Math.min(s.typed.length, target.length) / target.length) * 100,
-      )
+function renderStats(stats) {
+  el.wpm.textContent = stats.wpm;
+  el.accuracy.textContent = `${stats.accuracy}%`;
+  el.time.textContent = `${Math.floor(stats.seconds)}s`;
+  const { length } = round.target;
+  el.progress.value = length
+    ? Math.round((Math.min(stats.typedLength, length) / length) * 100)
     : 0;
-  document.getElementById("progress").value = progress;
 }
 
+// --- Updates ---
 function update() {
-  if (finished) return;
-  if (textarea.value && !startTime) startTime = Date.now();
+  if (round.finished) return;
+  const { value } = el.textarea;
+  if (value && !round.startTime) round.startTime = Date.now();
+  if (value === round.lastValue) return;
+  round.lastValue = value;
 
-  const s = stats();
-  if (textarea.value !== lastValue) {
-    lastValue = textarea.value;
-    renderTarget(s.typed);
-  }
-  renderStats(s);
+  const typed = Array.from(value.normalize("NFC"));
+  round.counts = { typedLength: typed.length, correct: countCorrect(typed) };
+
+  renderTarget(typed);
+  const stats = computeStats(round.counts);
+  renderStats(stats);
 
   // Done when the whole text is typed and the last character is right.
-  const last = target.length - 1;
-  if (last >= 0 && s.typed.length > last && s.typed[last] === target[last]) {
-    finish(s);
+  const last = round.target.length - 1;
+  if (last >= 0 && typed.length > last && typed[last] === round.target[last]) {
+    finish(stats);
   }
 }
 
-function finish(s) {
-  finished = true;
-  textarea.readOnly = true;
+// Run update at most once per frame, after Afrim has edited the text field.
+function scheduleUpdate() {
+  if (updateScheduled) return;
+  updateScheduled = true;
+  requestAnimationFrame(() => {
+    updateScheduled = false;
+    update();
+  });
+}
 
-  const bestKey = `afrim_best_${lang}`;
-  const best = Math.max(s.wpm, Number(localStorage.getItem(bestKey)) || 0);
+// Keep the timer and WPM live while a round is running.
+function tick() {
+  if (!round.startTime || round.finished) return;
+  renderStats(computeStats(round.counts));
+}
+
+function finish(stats) {
+  round.finished = true;
+  el.textarea.readOnly = true;
+
+  const bestKey = `afrim_best_${lang ?? "custom"}`;
+  const best = Math.max(stats.wpm, Number(localStorage.getItem(bestKey)) || 0);
   localStorage.setItem(bestKey, best);
 
-  document.getElementById("result-text").textContent =
-    `${s.wpm} WPM · ${s.accuracy}% accuracy · ${Math.round(s.seconds)}s` +
-    (s.wpm >= best ? " — new personal best! 🎉" : ` (best: ${best} WPM)`);
-  resultsBox.hidden = false;
-  document.getElementById("btn-next").focus();
+  el.resultText.textContent =
+    `${stats.wpm} WPM · ${stats.accuracy}% accuracy · ${Math.round(stats.seconds)}s` +
+    (stats.wpm >= best ? " — new personal best! 🎉" : ` (best: ${best} WPM)`);
+  el.results.hidden = false;
+  byId("btn-next").focus();
 }
 
 // --- Theme ---
@@ -245,13 +345,12 @@ function currentTheme() {
 
 function renderThemeButton() {
   const icon = currentTheme() === "dark" ? "fa-sun" : "fa-moon";
-  document.getElementById("btn-theme").querySelector("i").className =
-    `fas ${icon}`;
+  byId("btn-theme").querySelector("i").className = `fas ${icon}`;
 }
 
 function setupTheme() {
   renderThemeButton();
-  document.getElementById("btn-theme").addEventListener("click", () => {
+  byId("btn-theme").addEventListener("click", () => {
     const theme = currentTheme() === "dark" ? "light" : "dark";
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("afrim_theme", theme);
@@ -268,26 +367,17 @@ function setupControls() {
   setupTheme();
 
   // Navbar burger
-  document.querySelectorAll(".navbar-burger").forEach((el) => {
-    el.addEventListener("click", () => {
-      const active = el.classList.toggle("is-active");
-      el.setAttribute("aria-expanded", active);
-      document.getElementById(el.dataset.target).classList.toggle("is-active");
+  document.querySelectorAll(".navbar-burger").forEach((burger) => {
+    burger.addEventListener("click", () => {
+      const active = burger.classList.toggle("is-active");
+      burger.setAttribute("aria-expanded", active);
+      byId(burger.dataset.target).classList.toggle("is-active");
     });
   });
 
   // Language
-  if (configUrlParam) {
-    langSelect.add(new Option("Custom dataset", "", true, true));
-  }
-  for (const [code, name] of Object.entries(LANGUAGES)) {
-    langSelect.add(new Option(name, code, false, code === lang));
-  }
-  langSelect.addEventListener("change", (e) => {
-    const loc = new URL(window.location);
-    loc.searchParams.delete("configUrl");
-    loc.searchParams.set("lang", e.target.value);
-    window.location = loc.href;
+  el.langSelect.addEventListener("change", (e) => {
+    reloadWith({ configUrl: null, lang: e.target.value });
   });
 
   // Afrim toggles
@@ -297,84 +387,111 @@ function setupControls() {
     pdict: "toggle-pdict",
   };
   for (const [param, id] of Object.entries(toggles)) {
-    document.getElementById(id).checked = settings[param];
-    document.getElementById(id).addEventListener("change", (e) => {
+    const toggle = byId(id);
+    toggle.checked = settings[param];
+    toggle.addEventListener("change", () => {
       if (
         param === "dict" &&
-        e.target.checked &&
+        toggle.checked &&
         !confirm(
           "Some languages have a big dictionary, it can take some time to download.\n\nLoad the dictionary?",
         )
       ) {
-        e.target.checked = false;
+        toggle.checked = false;
         return;
       }
-      reloadWith(param, e.target.checked);
+      reloadWith({ [param]: toggle.checked });
     });
   }
-  document.getElementById("ime-options").hidden = !settings.ime;
-  document.getElementById("shortcuts").hidden = !settings.ime;
+  byId("ime-options").hidden = !settings.ime;
+  byId("shortcuts").hidden = !settings.ime;
 
   // Exercise
-  exerciseSelect.addEventListener("change", () => newRound());
-  customText.value = localStorage.getItem("afrim_custom_text") || "";
-  document.getElementById("btn-custom").addEventListener("click", () => {
-    localStorage.setItem("afrim_custom_text", customText.value);
+  el.exerciseSelect.addEventListener("change", () => newRound());
+  el.customText.value = localStorage.getItem("afrim_custom_text") || "";
+  byId("btn-custom").addEventListener("click", () => {
+    localStorage.setItem("afrim_custom_text", el.customText.value);
     newRound();
   });
 
   // Round
   // Restart keeps the same text, even for random drills.
-  document
-    .getElementById("btn-restart")
-    .addEventListener("click", () => newRound(target.join("")));
-  document
-    .getElementById("btn-next")
-    .addEventListener("click", () => newRound());
+  byId("btn-restart").addEventListener("click", () =>
+    newRound(round.target.join("")),
+  );
+  byId("btn-next").addEventListener("click", () => newRound());
 
   // Typing
-  textarea.addEventListener("keydown", (e) => {
+  el.textarea.addEventListener("keydown", (e) => {
     // The text is a single line.
     if (e.key === "Enter") e.preventDefault();
   });
   // Afrim edits the text field on keyup, so we read it right after.
-  for (const event of ["input", "keyup"]) {
-    textarea.addEventListener(event, () => setTimeout(update, 0));
+  for (const eventName of ["input", "keyup"]) {
+    el.textarea.addEventListener(eventName, scheduleUpdate);
   }
-  setInterval(update, 250);
+  setInterval(tick, 250);
+}
+
+// The configuration to load: the custom one, or the chosen dataset's.
+async function resolveConfigUrl(datasetsRequest) {
+  if (customConfigUrl) return customConfigUrl;
+
+  const dataset = chooseDataset(await datasetsRequest);
+  if (!dataset) throw new Error(`${dataUrl}datasets.json is empty`);
+
+  lang = dataset.dir;
+  sessionStorage.setItem("lang", lang);
+  return new URL(dataset.config, dataUrl).href;
+}
+
+async function startAfrim(configUrl, config) {
+  const afrimInput = new AfrimInput({
+    textFieldElementID: "textfield",
+    downloadStatusElementID: "download-status",
+    tooltipElementID: "tooltip",
+    tooltipInputElementID: "tooltip-input",
+    tooltipPredicatesElementID: "tooltip-predicates",
+    tooltipAdjustLeft: 0,
+    tooltipAdjustTop: 36,
+    configUrl,
+    config,
+    ignoreTranslation: !settings.dict,
+    ignoreTranslators: !settings.pdict,
+  });
+  try {
+    await afrimInput.ready;
+  } catch (err) {
+    console.error("Error initializing Afrim input:", err);
+    showError(
+      "Afrim couldn't start. You can still practice with your own keyboard.",
+    );
+  }
 }
 
 async function main() {
   setupControls();
-  const config = await loadDataset();
-  if (!charset.length) exerciseSelect.value = "custom";
+  // Download the engine (also used to parse the dataset) while we find out
+  // which dataset to load.
+  preloadAfrim();
 
-  if (config && settings.ime) {
-    const afrimInput = new AfrimInput({
-      textFieldElementID: "textfield",
-      downloadStatusElementID: "download-status",
-      tooltipElementID: "tooltip",
-      tooltipInputElementID: "tooltip-input",
-      tooltipPredicatesElementID: "tooltip-predicates",
-      tooltipAdjustLeft: 0,
-      tooltipAdjustTop: 36,
-      configUrl: configUrl,
-      config: config,
-      ignoreTranslation: !settings.dict,
-      ignoreTranslators: !settings.pdict,
-    });
-    try {
-      await afrimInput.ready;
-    } catch (err) {
-      console.error("Error initializing Afrim input:", err);
-      const status = $("download-status");
-      status.classList.replace("is-info", "is-danger");
-      status.textContent =
-        "Afrim couldn't start. You can still practice with your own keyboard.";
-      status.hidden = false;
-    }
+  const datasetsRequest = fetchDatasets();
+  let config = null;
+  try {
+    const configUrl = await resolveConfigUrl(datasetsRequest);
+    // The language list is not needed to start typing.
+    datasetsRequest.then(renderLanguageOptions, () => {});
+
+    config = await loadDataset(configUrl);
+    if (config && settings.ime) await startAfrim(configUrl, config);
+  } catch (err) {
+    console.error(err);
+    showError(
+      `Could not load the dataset list (${dataUrl}datasets.json). You can still practice your own text with your own keyboard.`,
+    );
   }
 
+  if (!charset.length) el.exerciseSelect.value = "custom";
   newRound();
 }
 
