@@ -1,149 +1,25 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="EB=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>⌨️ Afrim Web</title>
-    <meta
-      name="description"
-      content="Practice typing in African writing systems, right in your browser."
-    />
-    <meta name="author" content="@pythonbrad" />
-    <!-- Open connections early: dataset, fonts and icons. -->
-    <link rel="preconnect" href="https://fodydev.github.io" crossorigin />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://unpkg.com" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.4/css/bulma.min.css"
-    />
-    <link
-      href="https://unpkg.com/@fortawesome/fontawesome-free@5.13.0/css/all.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&family=Noto+Sans+Ethiopic:wght@400;600&family=Noto+Sans+Bamum&display=swap"
-      rel="stylesheet"
-    />
-    <script>
-      // Apply the saved theme before the page renders (default: system).
-      try {
-        const theme = localStorage.getItem("afrim_theme");
-        if (theme) document.documentElement.dataset.theme = theme;
-      } catch (e) {}
-    </script>
-    <style>
-      /* Colors come from Bulma variables, so they follow light/dark mode. */
-      kbd {
-        background-color: var(--bulma-scheme-main-bis);
-        border: 1px solid var(--bulma-border);
-        border-radius: 4px;
-        box-shadow: 0 2px 0 var(--bulma-border);
-        color: var(--bulma-text-strong);
-        display: inline-block;
-        font-family: monospace;
-        font-size: 0.85em;
-        font-weight: 600;
-        padding: 2px 6px;
-        white-space: nowrap;
-      }
-      [hidden] {
-        display: none !important;
-      }
-      .wrap {
-        display: flex;
-        flex-wrap: wrap;
-      }
-      .page {
-        padding: 0 16px;
-      }
-      .toolbar {
-        background-color: var(--bulma-scheme-main-bis);
-        border-bottom: 1px solid var(--bulma-border);
-        border-radius: var(--bulma-radius-large) var(--bulma-radius-large) 0 0;
-        padding: 0.75rem 1rem;
-      }
-      .target-font {
-        font-family:
-          "Noto Sans", "Noto Sans Ethiopic", "Noto Sans Bamum", sans-serif;
-        font-size: 1.4rem;
-        line-height: 1.8;
-      }
-      textarea.target-font {
-        resize: vertical;
-      }
-      .target {
-        min-height: 3.6em;
-        white-space: pre-wrap;
-        word-break: break-word;
-        color: var(--bulma-text-weak);
-      }
-      .target .ok {
-        color: var(--bulma-success-on-scheme);
-      }
-      .target .bad {
-        color: var(--bulma-danger-on-scheme);
-        background-color: var(--bulma-danger-soft);
-        border-radius: 2px;
-      }
-      .target .current {
-        color: var(--bulma-text-strong);
-        border-bottom: 3px solid var(--bulma-link);
-      }
-      .hint {
-        font-size: 0.9rem;
-        color: var(--bulma-text-weak);
-      }
-      .hint-char {
-        font-size: 1.3rem;
-        color: var(--bulma-text-strong);
-      }
-      .navbar.is-dark .navbar-burger {
-        color: var(--bulma-dark-invert);
-      }
-      .stats strong {
-        font-size: 1.25rem;
-      }
-    </style>
-  </head>
-  <body>
+<!doctype html><html lang=en><head><meta charset=UTF-8><meta http-equiv=X-UA-Compatible content="EB=edge"><meta name=viewport content="width=device-width,initial-scale=1.0"><title>⌨️ Afrim Web</title><meta name=description content="Practice typing in African writing systems, right in your browser."><meta name=author content=@pythonbrad><link rel=preconnect href=https://fodydev.github.io crossorigin><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=preconnect href=https://unpkg.com><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.4/css/bulma.min.css><link href=https://unpkg.com/@fortawesome/fontawesome-free@5.13.0/css/all.css rel=stylesheet><link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&family=Noto+Sans+Ethiopic:wght@400;600&family=Noto+Sans+Bamum&display=swap" rel=stylesheet><script>try{const t=localStorage.getItem("afrim_theme");t&&(document.documentElement.dataset.theme=t)}catch(t){}</script><style>kbd{color:var(--bulma-text-strong);white-space:nowrap;background-color:var(--bulma-scheme-main-bis);border:1px solid var(--bulma-border);border-radius:4px;padding:2px 6px;font-family:monospace;font-size:.85em;font-weight:600;display:inline-block;box-shadow:0 2px 0 var(--bulma-border)}[hidden]{display:none!important}.wrap{flex-wrap:wrap;display:flex}.page{padding:0 16px}.toolbar{background-color:var(--bulma-scheme-main-bis);border-bottom:1px solid var(--bulma-border);border-radius:var(--bulma-radius-large) var(--bulma-radius-large) 0 0;padding:.75rem 1rem}.target-font{font-family:Noto Sans,Noto Sans Ethiopic,Noto Sans Bamum,sans-serif;font-size:1.4rem;line-height:1.8}textarea.target-font{resize:vertical}.target{white-space:pre-wrap;word-break:break-word;color:var(--bulma-text-weak);min-height:3.6em}.target .ok{color:var(--bulma-success-on-scheme)}.target .bad{color:var(--bulma-danger-on-scheme);background-color:var(--bulma-danger-soft);border-radius:2px}.target .current{color:var(--bulma-text-strong);border-bottom:3px solid var(--bulma-link)}.hint{color:var(--bulma-text-weak);font-size:.9rem}.hint-char{color:var(--bulma-text-strong);font-size:1.3rem}.navbar.is-dark .navbar-burger{color:var(--bulma-dark-invert)}.stats strong{font-size:1.25rem}</style></head><body>
     <nav class="navbar is-dark mb-5">
-      <div class="container">
-        <div class="navbar-brand">
+      <div class=container>
+        <div class=navbar-brand>
           <a class="navbar-item is-size-5 has-text-weight-bold">⌨️ Afrim Web</a>
           <div class="navbar-item ml-auto">
-            <button
-              class="button is-dark is-inverted is-outlined"
-              id="btn-theme"
-              title="Switch light / dark mode"
-              aria-label="Switch light / dark mode"
-            >
-              <span class="icon"><i class="fas fa-moon"></i></span>
+            <button class="button is-dark is-inverted is-outlined" id=btn-theme title="Switch light / dark mode" aria-label="Switch light / dark mode">
+              <span class=icon><i class="fas fa-moon"></i></span>
             </button>
           </div>
-          <a
-            role="button"
-            class="navbar-burger ml-0"
-            data-target="navbar-menu"
-            aria-label="menu"
-            aria-expanded="false"
-          >
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
+          <a role=button class="navbar-burger ml-0" data-target=navbar-menu aria-label=menu aria-expanded=false>
+            <span aria-hidden=true></span>
+            <span aria-hidden=true></span>
+            <span aria-hidden=true></span>
+            <span aria-hidden=true></span>
           </a>
         </div>
-        <div id="navbar-menu" class="navbar-menu">
-          <div class="navbar-end">
-            <span class="navbar-item">
-              <a
-                class="button is-dark is-inverted is-outlined"
-                href="https://github.com/fodydev/afrim-web"
-                target="_blank"
-              >
-                <span class="icon">
+        <div id=navbar-menu class=navbar-menu>
+          <div class=navbar-end>
+            <span class=navbar-item>
+              <a class="button is-dark is-inverted is-outlined" href=https://github.com/fodydev/afrim-web target=_blank>
+                <span class=icon>
                   <i class="fab fa-github"></i>
                 </span>
                 <span>Source Code</span>
@@ -155,169 +31,122 @@
     </nav>
 
     <div class="container page">
-      <section class="mb-5">
+      <section class=mb-5>
         <h1 class="title is-4 mb-2">Learn to type in your writing system</h1>
         <p class="subtitle is-6 has-text-grey">
           Pick a language, type the text, and get faster every day.
         </p>
       </section>
 
-      <!-- Dataset download status -->
-      <div id="download-status" class="notification is-info is-light" hidden>
+      
+      <div id=download-status class="notification is-info is-light" hidden>
         Loading dataset...
       </div>
 
       <div class="box p-0 mb-5">
-        <!-- Settings -->
-        <div class="toolbar wrap is-align-items-flex-end" style="gap: 1.25rem">
+        
+        <div class="toolbar wrap is-align-items-flex-end" style=gap:1.25rem>
           <div class="field mb-0">
-            <label class="label is-small mb-1" for="lang-select"
-              >Language</label
-            >
+            <label class="label is-small mb-1" for=lang-select>Language</label>
             <div class="select is-small">
-              <select id="lang-select"></select>
+              <select id=lang-select></select>
             </div>
           </div>
           <div class="field mb-0">
-            <label class="label is-small mb-1" for="exercise-select"
-              >Exercise</label
-            >
+            <label class="label is-small mb-1" for=exercise-select>Exercise</label>
             <div class="select is-small">
-              <select id="exercise-select">
-                <option value="drill">Random letters</option>
-                <option value="custom">My own text</option>
+              <select id=exercise-select>
+                <option value=drill>Random letters</option>
+                <option value=custom>My own text</option>
               </select>
             </div>
           </div>
           <div class="field mb-0">
-            <label
-              class="checkbox"
-              title="Type with Latin letters, Afrim converts them into your writing system. Turn it off to use your own keyboard."
-            >
-              <input type="checkbox" id="toggle-ime" />
+            <label class=checkbox title="Type with Latin letters, Afrim converts them into your writing system. Turn it off to use your own keyboard.">
+              <input type=checkbox id=toggle-ime>
               <strong>Afrim keyboard</strong>
             </label>
           </div>
-          <div id="ime-options" class="field mb-0 is-size-7" hidden>
+          <div id=ime-options class="field mb-0 is-size-7" hidden>
             <span class="has-text-grey mr-2">Suggestions:</span>
-            <label
-              class="checkbox mr-2"
-              title="Suggest words from the dictionary. Some dictionaries are big and take time to download."
-            >
-              <input type="checkbox" id="toggle-dict" /> Dictionary
+            <label class="checkbox mr-2" title="Suggest words from the dictionary. Some dictionaries are big and take time to download.">
+              <input type=checkbox id=toggle-dict> Dictionary
             </label>
-            <label
-              class="checkbox"
-              title="Programmable suggestions (numbers, dates...)"
-            >
-              <input type="checkbox" id="toggle-pdict" /> Translator
+            <label class=checkbox title="Programmable suggestions (numbers, dates...)">
+              <input type=checkbox id=toggle-pdict> Translator
             </label>
           </div>
         </div>
 
-        <div class="p-4">
-          <!-- Custom text -->
-          <div id="custom-panel" class="mb-4" hidden>
-            <textarea
-              id="custom-text"
-              class="textarea target-font"
-              rows="2"
-              placeholder="Paste or write any text you want to practice..."
-            ></textarea>
-            <button class="button is-small is-dark mt-2" id="btn-custom">
+        <div class=p-4>
+          
+          <div id=custom-panel class=mb-4 hidden>
+            <textarea id=custom-text class="textarea target-font" rows=2 placeholder="Paste or write any text you want to practice..."></textarea>
+            <button class="button is-small is-dark mt-2" id=btn-custom>
               Use this text
             </button>
           </div>
 
-          <!-- Text to type -->
-          <div id="target" class="target target-font" lang="und"></div>
-          <p id="hint" class="hint mb-3">&nbsp;</p>
+          
+          <div id=target class="target target-font" lang=und></div>
+          <p id=hint class="hint mb-3"> </p>
 
-          <!-- Typing area -->
-          <div style="position: relative">
-            <textarea
-              autocomplete="off"
-              autocorrect="off"
-              autocapitalize="off"
-              spellcheck="false"
-              id="textfield"
-              class="textarea target-font"
-              rows="3"
-              placeholder="Start typing the text above..."
-            ></textarea>
-            <!-- Afrim suggestions -->
-            <div
-              id="tooltip"
-              class="dropdown"
-              style="z-index: 999; position: absolute"
-            >
-              <div class="dropdown-menu">
-                <div class="dropdown-content">
-                  <a class="dropdown-item" id="tooltip-input"></a>
-                  <hr class="dropdown-divider" />
-                  <div id="tooltip-predicates"></div>
+          
+          <div style=position:relative>
+            <textarea autocomplete=off autocorrect=off autocapitalize=off spellcheck=false id=textfield class="textarea target-font" rows=3 placeholder="Start typing the text above..."></textarea>
+            
+            <div id=tooltip class=dropdown style=z-index:999;position:absolute>
+              <div class=dropdown-menu>
+                <div class=dropdown-content>
+                  <a class=dropdown-item id=tooltip-input></a>
+                  <hr class=dropdown-divider>
+                  <div id=tooltip-predicates></div>
                 </div>
               </div>
             </div>
           </div>
 
-          <progress
-            id="progress"
-            class="progress is-small is-dark mt-3 mb-3"
-            value="0"
-            max="100"
-          ></progress>
+          <progress id=progress class="progress is-small is-dark mt-3 mb-3" value=0 max=100></progress>
 
-          <!-- Live stats -->
-          <div
-            class="wrap is-justify-content-space-between is-align-items-center"
-            style="gap: 1rem"
-          >
-            <div class="wrap stats" style="gap: 1.5rem">
-              <div><strong id="stat-wpm">0</strong> WPM</div>
-              <div><strong id="stat-accuracy">100%</strong> accuracy</div>
-              <div><strong id="stat-time">0s</strong></div>
+          
+          <div class="wrap is-justify-content-space-between is-align-items-center" style=gap:1rem>
+            <div class="wrap stats" style=gap:1.5rem>
+              <div><strong id=stat-wpm>0</strong> WPM</div>
+              <div><strong id=stat-accuracy>100%</strong> accuracy</div>
+              <div><strong id=stat-time>0s</strong></div>
             </div>
             <div class="buttons mb-0">
-              <button class="button is-small" id="btn-restart">
-                <span class="icon"><i class="fas fa-redo"></i></span>
+              <button class="button is-small" id=btn-restart>
+                <span class=icon><i class="fas fa-redo"></i></span>
                 <span>Restart</span>
               </button>
-              <button class="button is-small is-dark" id="btn-next">
+              <button class="button is-small is-dark" id=btn-next>
                 <span>New text</span>
-                <span class="icon"><i class="fas fa-arrow-right"></i></span>
+                <span class=icon><i class="fas fa-arrow-right"></i></span>
               </button>
             </div>
           </div>
 
-          <!-- Results -->
-          <div
-            id="results"
-            class="notification is-success is-light mt-4"
-            hidden
-          >
-            <strong>Done!</strong> <span id="result-text"></span>
-            <span class="is-size-7"
-              >Press <kbd>Enter</kbd> for a new text.</span
-            >
+          
+          <div id=results class="notification is-success is-light mt-4" hidden>
+            <strong>Done!</strong> <span id=result-text></span>
+            <span class=is-size-7>Press <kbd>Enter</kbd> for a new text.</span>
           </div>
         </div>
       </div>
 
-      <div class="columns">
-        <!-- How it works -->
-        <div class="column">
-          <div class="card">
-            <header class="card-header">
-              <p class="card-header-title">
-                <span class="icon mr-2"
-                  ><i class="fas fa-question-circle"></i
-                ></span>
+      <div class=columns>
+        
+        <div class=column>
+          <div class=card>
+            <header class=card-header>
+              <p class=card-header-title>
+                <span class="icon mr-2"><i class="fas fa-question-circle"></i></span>
                 How it works
               </p>
             </header>
             <div class="card-content content is-size-7">
-              <ol class="mt-0">
+              <ol class=mt-0>
                 <li>Choose your language and an exercise.</li>
                 <li>
                   With <strong>Afrim keyboard</strong> on, type Latin letters:
@@ -337,11 +166,11 @@
           </div>
         </div>
 
-        <!-- Shortcuts -->
-        <div class="column" id="shortcuts">
-          <div class="card">
-            <header class="card-header">
-              <p class="card-header-title">
+        
+        <div class=column id=shortcuts>
+          <div class=card>
+            <header class=card-header>
+              <p class=card-header-title>
                 <span class="icon mr-2"><i class="fas fa-keyboard"></i></span>
                 Afrim shortcuts
               </p>
@@ -375,85 +204,60 @@
           </div>
         </div>
 
-        <!-- Custom dataset -->
-        <div class="column">
-          <div class="card">
-            <header class="card-header">
-              <p class="card-header-title">
+        
+        <div class=column>
+          <div class=card>
+            <header class=card-header>
+              <p class=card-header-title>
                 <span class="icon mr-2"><i class="fas fa-cogs"></i></span>
                 Your own dataset
               </p>
             </header>
             <div class="card-content is-size-7">
-              <p class="mb-2">
+              <p class=mb-2>
                 Load any Afrim TOML configuration (plain or gzipped) with the
                 <code>configUrl</code> parameter:
               </p>
-              <code class="is-block mb-2" style="word-break: break-all"
-                >?configUrl=https://fodydev.github.io/afrim-data/am/am.toml.gz</code
-              >
-              <p class="mb-2">
+              <code class="is-block mb-2" style=word-break:break-all>?configUrl=https://fodydev.github.io/afrim-data/am/am.toml.gz</code>
+              <p class=mb-2>
                 Or use another
-                <a href="https://github.com/fodydev/afrim-data#web-access"
-                  >afrim-data</a
-                >
+                <a href=https://github.com/fodydev/afrim-data#web-access>afrim-data</a>
                 site with the <code>dataUrl</code> parameter:
               </p>
-              <code class="is-block" style="word-break: break-all"
-                >?dataUrl=https://fodydev.github.io/afrim-data</code
-              >
+              <code class=is-block style=word-break:break-all>?dataUrl=https://fodydev.github.io/afrim-data</code>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Footer -->
+    
     <footer class="footer mt-6 py-5">
       <div class="content has-text-centered">
-        <p class="mb-2">
-          <a
-            class="icon mx-2"
-            href="https://github.com/fodydev/afrim-web"
-            target="_blank"
-          >
+        <p class=mb-2>
+          <a class="icon mx-2" href=https://github.com/fodydev/afrim-web target=_blank>
             <i class="fab fa-github fa-lg"></i>
           </a>
-          <a
-            class="icon mx-2"
-            href="https://twitter.com/pythonbrad"
-            target="_blank"
-          >
+          <a class="icon mx-2" href=https://twitter.com/pythonbrad target=_blank>
             <i class="fab fa-twitter fa-lg"></i>
           </a>
         </p>
-        <p class="is-size-7">
+        <p class=is-size-7>
           <strong>Afrim Web</strong> by
-          <a href="https://github.com/pythonbrad" target="_blank"
-            >Brady Fomegne</a
-          >. Powered by
-          <a href="https://github.com/fodydev/afrim-js" target="_blank"
-            >AfrimJS</a
-          >. Licensed under
-          <a
-            href="https://opensource.org/licenses/mit-license.php"
-            target="_blank"
-            >MIT</a
-          >.
+          <a href=https://github.com/pythonbrad target=_blank>Brady Fomegne</a>. Powered by
+          <a href=https://github.com/fodydev/afrim-js target=_blank>AfrimJS</a>. Licensed under
+          <a href=https://opensource.org/licenses/mit-license.php target=_blank>MIT</a>.
         </p>
-        <a
-          class="button is-warning is-small mt-2"
-          href="https://www.buymeacoffee.com/pythonbrad"
-          target="_blank"
-        >
-          <span class="icon"><i class="fas fa-coffee"></i></span>
+        <a class="button is-warning is-small mt-2" href=https://www.buymeacoffee.com/pythonbrad target=_blank>
+          <span class=icon><i class="fas fa-coffee"></i></span>
           <span>Buy Me A Coffee</span>
         </a>
       </div>
     </footer>
 
-    <!-- Scripts -->
-    <script type="text/javascript" src="./afrim_input.js" defer></script>
-    <script type="text/javascript" src="./index.js" defer></script>
-  </body>
-</html>
+    
+    <script type=text/javascript src=./afrim_input.js defer></script>
+    <script type=text/javascript src=./index.js defer></script>
+  
+
+</body></html>
