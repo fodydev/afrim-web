@@ -73,6 +73,8 @@ function showError(message) {
 let lang = null; // Directory of the selected dataset, null when custom.
 let charset = []; // Characters of the dataset, used for random drills.
 const hints = {}; // Character => shortest Afrim code producing it.
+// Whether the hinted code gives candidates to pick (dictionary-only dataset).
+let hintsNeedPick = false;
 let updateScheduled = false;
 
 // The current round, reset by `newRound`.
@@ -116,14 +118,28 @@ function renderLanguageOptions(datasets) {
 async function loadDataset(configUrl) {
   el.status.hidden = false;
 
-  const config = new AfrimConfig();
+  const ignoreTranslators = !(settings.ime && settings.pdict);
+  const ignoreTranslation = !(settings.ime && settings.dict);
+  let config;
   try {
+    config = new AfrimConfig();
     await config.loadFromUrl(
       configUrl,
       el.status,
-      !(settings.ime && settings.dict),
-      !(settings.ime && settings.pdict),
+      ignoreTranslation,
+      ignoreTranslators,
     );
+    // Without data, the dataset is only a dictionary (e.g. Mandarin pinyin):
+    // load it anyway, the drills and hints come from it.
+    if (ignoreTranslation && !Object.keys(config.data).length) {
+      config = new AfrimConfig();
+      await config.loadFromUrl(configUrl, el.status, false, ignoreTranslators);
+      const toggle = byId("toggle-dict");
+      toggle.checked = true;
+      toggle.disabled = true;
+      toggle.parentElement.title =
+        "This dataset is a dictionary, it is always loaded.";
+    }
   } catch (err) {
     console.error(err);
     showError(
@@ -133,10 +149,22 @@ async function loadDataset(configUrl) {
   }
   el.status.hidden = true;
 
-  for (const [code, value] of Object.entries(config.data)) {
-    const char = value.normalize("NFC");
-    if (!/[^\x00-\x7F]/.test(char)) continue;
+  const addHint = (code, text) => {
+    const char = text.normalize("NFC");
+    if (!/[^\x00-\x7F]/.test(char)) return;
     if (!hints[char] || code.length < hints[char].length) hints[char] = code;
+  };
+  const data = Object.entries(config.data);
+  if (data.length) {
+    for (const [code, value] of data) addHint(code, value);
+  } else {
+    // Dictionary only: use the first (most frequent) candidate of each code.
+    hintsNeedPick = true;
+    for (const [code, texts] of Object.entries(config.translation)) {
+      if (texts[0] && Array.from(texts[0]).length === 1) {
+        addHint(code, texts[0]);
+      }
+    }
   }
   charset = Object.keys(hints).filter(
     (c) =>
@@ -264,6 +292,9 @@ function renderHint(char) {
     el.hint.innerHTML = "Next: <kbd>Space</kbd>";
   } else if (settings.ime && hints[char]) {
     el.hint.innerHTML = `Next: <span class="hint-char"></span> → type <kbd></kbd>`;
+    if (hintsNeedPick) {
+      el.hint.innerHTML += " then <kbd>Ctrl</kbd>+<kbd>Space</kbd>";
+    }
     el.hint.querySelector(".hint-char").textContent = char;
     el.hint.querySelector("kbd").textContent = hints[char];
   } else {

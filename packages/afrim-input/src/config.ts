@@ -10,6 +10,8 @@ type LoadOptions = {
   downloadStatusElement: HTMLElement;
   ignoreTranslation: boolean;
   ignoreTranslators: boolean;
+  // Aborts the downloads still running when the loading fails.
+  signal: AbortSignal;
 };
 
 function isTable(value: unknown): value is TomlTable {
@@ -59,11 +61,20 @@ export class AfrimConfig {
     ignoreTranslation: boolean,
     ignoreTranslators: boolean,
   ): Promise<void> {
-    await this.load(configUrl, {
-      downloadStatusElement,
-      ignoreTranslation,
-      ignoreTranslators,
-    });
+    const controller = new AbortController();
+    try {
+      await this.load(configUrl, {
+        downloadStatusElement,
+        ignoreTranslation,
+        ignoreTranslators,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      // Stop the other downloads: they are useless now, and their progress
+      // would overwrite the error shown in the status element.
+      controller.abort();
+      throw err;
+    }
   }
 
   private async load(configUrl: string, options: LoadOptions): Promise<void> {
@@ -71,7 +82,7 @@ export class AfrimConfig {
     loadAfrim();
 
     const content: TomlTable = await tomlToJson(
-      await fetchText(configUrl, options.downloadStatusElement),
+      await fetchText(configUrl, options.downloadStatusElement, options.signal),
     );
     const autoCapitalize: boolean =
       content.get("core")?.get("auto_capitalize") ?? false;
@@ -104,7 +115,11 @@ export class AfrimConfig {
     const dataIncludes = loadIncludes(dataEntries);
     const translatorScripts = Promise.all(
       translatorEntries.map(([, path]) =>
-        fetchText(new URL(path, configUrl).href, options.downloadStatusElement),
+        fetchText(
+          new URL(path, configUrl).href,
+          options.downloadStatusElement,
+          options.signal,
+        ),
       ),
     );
     // Avoid unhandled rejections if we fail before awaiting some of them.
@@ -159,10 +174,13 @@ export class AfrimConfig {
     Object.assign(this.translators, other.translators);
   }
 
-  // Applies a `[translation]` entry: `key = "text"` or a table with aliases.
+  // Applies a `[translation]` entry: `key = "text"`, `key = ["text", …]`
+  // or a table with aliases.
   private applyTranslation(key: string, value: unknown, configUrl: string) {
     if (typeof value === "string") {
       this.translation[key] = [value];
+    } else if (Array.isArray(value)) {
+      this.translation[key] = value;
     } else if (isTable(value) && value.has("alias")) {
       const texts: string[] = value.has("values")
         ? value.get("values")
