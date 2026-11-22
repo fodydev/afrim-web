@@ -1,1 +1,4 @@
 /*! MIT License © Sindre Sorhus */
+
+
+/*! For license information please see afrim_input.js.LICENSE.txt */
