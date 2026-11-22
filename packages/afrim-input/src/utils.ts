@@ -44,8 +44,10 @@ async function gunzip(buffer: ArrayBuffer): Promise<string> {
 export async function fetchText(
   url: string,
   downloadStatusElement: HTMLElement,
+  signal?: AbortSignal,
 ): Promise<string> {
   const response = await ky(url, {
+    signal,
     // Dictionaries can take a while on slow connections and the progress is
     // shown, so don't give up after ky's default 10s.
     timeout: false,
