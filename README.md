@@ -26,8 +26,16 @@
 
 ```
 npm install
-npm start
+npm run build   # build afrim-input and the playground
+npm start       # serve the production build on http://localhost:8080
 ```
+
+For development, `npm run dev` starts a dev server with live reload
+(including changes made in `afrim-input`).
+
+Both servers listen on port 8080 by default. Use the `PORT` environment
+variable to pick another one, e.g. `PORT=3000 npm start` or
+`PORT=3000 npm run dev` (PowerShell: `$env:PORT=3000; npm start`).
 
 ## 🚴 Components availables for reuse
 

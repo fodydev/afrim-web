@@ -29,6 +29,4 @@ jobs:
         run: npm run fmt-check
 
       - name: Build
-        run: |
-          npm run build-afrim-input
-          npm run build
+        run: npm run build

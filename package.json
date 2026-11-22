@@ -7,11 +7,11 @@
   ],
   "packageManager": "npm@10.7.0",
   "engines": {
-    "nodes": ">=18.0.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
-    "build-afrim-input": "npm -w afrim-input run bundle",
-    "build": "npm -w afrim-playground run bundle",
+    "build": "npm -w afrim-input run bundle && npm -w afrim-playground run bundle",
+    "dev": "npm -w afrim-input run build:dev && concurrently -k -n input,playground \"npm -w afrim-input run watch\" \"npm -w afrim-playground run dev\"",
     "start": "npm -w afrim-playground start",
     "fmt-check": "npx prettier . --check",
     "fmt": "npx prettier . --write --cache"
@@ -30,6 +30,7 @@
   },
   "homepage": "https://github.com/fodydev/afrim-web#readme",
   "devDependencies": {
+    "concurrently": "^10.0.7",
     "prettier": "3.9.6"
   }
 }
