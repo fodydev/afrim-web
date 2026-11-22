@@ -9,6 +9,8 @@
   ],
   "scripts": {
     "dev": "webpack serve --config webpack.dev.js",
+    "build:dev": "webpack --config webpack.dev.js",
+    "watch": "webpack --config webpack.dev.js --watch",
     "typecheck": "tsc --noEmit",
     "bundle": "npm run typecheck && webpack --config webpack.prod.js"
   },
@@ -31,13 +33,13 @@
   },
   "dependencies": {
     "afrim": "^0.5.0",
-    "copy-webpack-plugin": "14.0.0",
     "ky": "^2.0.2",
     "textarea-caret": "^3.1.0"
   },
   "devDependencies": {
-    "ts-loader": "^9.6.2",
     "@types/node": "^26.1.1",
+    "compression-webpack-plugin": "^12.0.0",
+    "ts-loader": "^9.6.2",
     "typescript": "^5.0.0",
     "webpack": "^5.108.4",
     "webpack-cli": "^7.2.1",
