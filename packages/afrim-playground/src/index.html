@@ -10,6 +10,10 @@
       content="Practice typing in African writing systems, right in your browser."
     />
     <meta name="author" content="@pythonbrad" />
+    <!-- Open connections early: dataset, fonts and icons. -->
+    <link rel="preconnect" href="https://fodydev.github.io" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://unpkg.com" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.4/css/bulma.min.css"
@@ -382,11 +386,21 @@
             </header>
             <div class="card-content is-size-7">
               <p class="mb-2">
-                Load any Afrim TOML configuration with the
+                Load any Afrim TOML configuration (plain or gzipped) with the
                 <code>configUrl</code> parameter:
               </p>
+              <code class="is-block mb-2" style="word-break: break-all"
+                >?configUrl=https://fodydev.github.io/afrim-data/am/am.toml.gz</code
+              >
+              <p class="mb-2">
+                Or use another
+                <a href="https://github.com/fodydev/afrim-data#web-access"
+                  >afrim-data</a
+                >
+                site with the <code>dataUrl</code> parameter:
+              </p>
               <code class="is-block" style="word-break: break-all"
-                >?configUrl=https://raw.githubusercontent.com/fodydev/afrim-data/7584bc34cce93f8c52533065899d49acb42bd6d0/am/am.toml</code
+                >?dataUrl=https://fodydev.github.io/afrim-data</code
               >
             </div>
           </div>
@@ -439,7 +453,7 @@
     </footer>
 
     <!-- Scripts -->
-    <script type="text/javascript" src="./afrim_input.js"></script>
-    <script type="text/javascript" src="./index.js"></script>
+    <script type="text/javascript" src="./afrim_input.js" defer></script>
+    <script type="text/javascript" src="./index.js" defer></script>
   </body>
 </html>

@@ -37,6 +37,17 @@ Both servers listen on port 8080 by default. Use the `PORT` environment
 variable to pick another one, e.g. `PORT=3000 npm start` or
 `PORT=3000 npm run dev` (PowerShell: `$env:PORT=3000; npm start`).
 
+### Datasets
+
+The languages come from the [afrim-data](https://github.com/fodydev/afrim-data#web-access)
+site, `https://fodydev.github.io/afrim-data` by default: its `datasets.json`
+lists the datasets shown in the playground.
+
+- Build against another afrim-data site with the `AFRIM_DATA_URL` environment
+  variable, e.g. `AFRIM_DATA_URL=https://example.org/afrim-data npm run build`.
+- At runtime, `?dataUrl=<site>` uses another site, and `?configUrl=<file>` loads
+  a single configuration (`.toml` or `.toml.gz`).
+
 ## 🚴 Components availables for reuse
 
 - ✍️ [afrim-input](packages/afrim-input): A js library who allow you to easily reuse the afrim on any text field.

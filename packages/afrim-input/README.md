@@ -29,9 +29,13 @@ new AfrimInput({
   tooltipElementID: "tooltip",
   tooltipInputElementID: "tooltip-input",
   tooltipPredicatesElementID: "tooltip-predicates",
-  configUrl: `https://raw.githubusercontent.com/fodydev/afrim-data/4b177197bb37c9742cd90627b1ad543c32ec791b/gez/gez.toml`,
+  configUrl: "https://fodydev.github.io/afrim-data/gez/gez.toml.gz",
 });
 ```
+
+A data source is required: either `configUrl` or an already loaded `config` (see below).
+The configurations published by [afrim-data](https://github.com/fodydev/afrim-data#web-access) are listed in [`datasets.json`](https://fodydev.github.io/afrim-data/datasets.json).
+Gzipped configurations (`*.toml.gz`) are supported: they are decompressed in the browser, and the `.toml` files they include are fetched as `.toml.gz` too.
 
 ### Waiting for Afrim
 
